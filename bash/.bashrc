@@ -3,17 +3,17 @@
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
-export PATH=$PATH:/home/bichphuong/matlab/bin
+#export PATH=$PATH:/home/bichphuong/matlab/bin
 
 #### for spack
-export SPACK_ROOT=/home/bichphuong/spack
-export PATH=$SPACK_ROOT/bin:$PATH
-. $SPACK_ROOT/share/spack/setup-env.sh
+#export SPACK_ROOT=/home/bichphuong/spack
+#export PATH=$SPACK_ROOT/bin:$PATH
+#. $SPACK_ROOT/share/spack/setup-env.sh
 
-. $(spack location -i lmod)/lmod/lmod/init/bash
+#. $(spack location -i lmod)/lmod/lmod/init/bash
 
-module unuse $SPACK_ROOT/share/modules/linux-ubuntu20.04-skylake 
-module use $SPACK_ROOT/share/lmod/linux-ubuntu20.04-x86_64/Core/
+#module unuse $SPACK_ROOT/share/modules/linux-ubuntu20.04-skylake 
+#module use $SPACK_ROOT/share/lmod/linux-ubuntu20.04-x86_64/Core/
 
 #### For ibus-unikey
 export GTK_IM_MODULE=ibus
