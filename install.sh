@@ -24,7 +24,8 @@ then
 	export PATH=~/local/python/bin:$PATH
 	export CPATH=~/local/python/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
-	" >> ~/.barhrc
+	" >> ~/.bashrc
+  rm -rf Python-3.11.1*
 fi
 
 # Install pip3
@@ -36,7 +37,8 @@ then
 	echo "# Pip3 paths
 	export PATH=~/.local/bin:$PATH
 	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
-	" >> ~/.barhrc
+	" >> ~/.bashrc
+  rm get-pip.py
 fi
 
 # Install nvim
@@ -58,10 +60,10 @@ then
 	export PATH=~/local/nvim/bin:$PATH
 	export CPATH=~/local/nvim/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
-	" >> ~/.barhrc
+	" >> ~/.bashrc
 
 	cd ~/local
-	rm -rf neovim
+	rm -rf neovim/
 	echo "... Done"
 fi
 
