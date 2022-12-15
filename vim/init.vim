@@ -194,6 +194,6 @@ call plug#end()            " required
 """
 "let g:werewolf_day_themes = ['morning']
 "let g:werewolf_night_themes = ['desert']
-colorscheme desert
+colorscheme dayfox
 
 

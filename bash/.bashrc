@@ -169,3 +169,8 @@ function open() {
 }
 export -f open
 
+# nvim
+if [ -x "$(which nvim)" ]; then
+  alias vim="$(which nvim)"
+fi
+
