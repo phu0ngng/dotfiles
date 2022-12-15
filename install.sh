@@ -6,17 +6,19 @@ cp $DDIR/bash/.bashrc ~
 cp $DDIR/tmux/.tmux.conf ~
 
 # Install python3
-if ! command -v python3 &> /dev/null
+if ! command -v python3 &> /dev/null \
+       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 8 ;
 then
 	mkdir -p ~/local
 	cd ~/local
 	wget https://www.python.org/ftp/python/3.11.1/Python-3.11.1.tar.xz
 	tar -xvf Python-3.11.1.tar.xz
 	cd Python-3.11.1/
+	mkdir -p ../python
 	./configure --prefix=$(pwd)/../python --enable-optimizations
 	make -j
 	make install
-  cd ..
+	cd ..
 	export PATH=~/local/python/bin:$PATH
 	export CPATH=~/local/python/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
@@ -25,7 +27,7 @@ then
 	export CPATH=~/local/python/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
 	" >> ~/.bashrc
-  rm -rf Python-3.11.1*
+	rm -rf Python-3.11.1*
 fi
 
 # Install pip3
