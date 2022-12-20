@@ -50,6 +50,7 @@ then
 	cd ~/local
 	git clone https://github.com/neovim/neovim.git
 	cd neovim
+    git checkout release-0.8
 	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/local/nvim -j
 	make install
 
