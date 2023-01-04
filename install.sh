@@ -28,6 +28,15 @@ then
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 	rm -rf Python-3.11.1*
+    # Install pip3
+	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3) get-pip.py --user
+	export PATH=~/.local/bin:$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	echo "# Pip3 paths
+	export PATH=~/.local/bin:$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	" >> ~/.bashrc
+    rm get-pip.py
 fi
 
 # Install pip3
