@@ -189,6 +189,29 @@ let g:deoplete#enable_at_startup = 1
 """ Latex
 au FileType tex Plug 'lervag/vimtex'
 
+"""" Clang format
+"" Add maktaba and codefmt to the runtimepath.
+"" (The latter must be installed before it can be used.)
+"Plug 'google/vim-maktaba'
+"Plug 'google/vim-codefmt'
+"" Also add Glaive, which is used to configure codefmt's maktaba flags. See
+"" `:help :Glaive` for usage.
+"Plug 'google/vim-glaive'
+"augroup autoformat_settings
+"  autocmd FileType bzl AutoFormatBuffer buildifier
+"  autocmd FileType c,cpp,proto,javascript,arduino AutoFormatBuffer clang-format
+"  autocmd FileType dart AutoFormatBuffer dartfmt
+"  autocmd FileType go AutoFormatBuffer gofmt
+"  autocmd FileType gn AutoFormatBuffer gn
+"  autocmd FileType html,css,sass,scss,less,json AutoFormatBuffer js-beautify
+"  autocmd FileType java AutoFormatBuffer google-java-format
+"  autocmd FileType python AutoFormatBuffer yapf
+"  " Alternative: autocmd FileType python AutoFormatBuffer autopep8
+"  autocmd FileType rust AutoFormatBuffer rustfmt
+"  autocmd FileType vue AutoFormatBuffer prettier
+"  autocmd FileType swift AutoFormatBuffer swift-format
+"augroup END
+
 call plug#end()            " required
 
 """
