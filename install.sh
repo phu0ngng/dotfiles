@@ -23,9 +23,9 @@ then
 	export CPATH=~/local/python/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
 	echo "# Python paths
-	export PATH=~/local/python/bin:$PATH
-	export CPATH=~/local/python/include:$CPATH
-	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
+	export PATH=~/local/python/bin:\$PATH
+	export CPATH=~/local/python/include:\$CPATH
+	export LD_LIBRARY_PATH=~/local/python/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 	rm -rf Python-3.11.1*
     # Install pip3
@@ -33,8 +33,8 @@ then
 	export PATH=~/.local/bin:$PATH
 	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
 	echo "# Pip3 paths
-	export PATH=~/.local/bin:$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	export PATH=~/.local/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
     rm get-pip.py
 fi
@@ -46,8 +46,8 @@ then
 	export PATH=~/.local/bin:$PATH
 	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
 	echo "# Pip3 paths
-	export PATH=~/.local/bin:$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	export PATH=~/.local/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
   rm get-pip.py
 fi
@@ -108,9 +108,9 @@ then
 	export CPATH=~/local/nvim/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
 	echo "# NVIM paths
-	export PATH=~/local/nvim/bin:$PATH
-	export CPATH=~/local/nvim/include:$CPATH
-	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
+	export PATH=~/local/nvim/bin:\$PATH
+	export CPATH=~/local/nvim/include:\$CPATH
+	export LD_LIBRARY_PATH=~/local/nvim/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 
 	cd ~/local
