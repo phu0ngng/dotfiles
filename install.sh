@@ -20,11 +20,9 @@ then
 	make install
 	cd ..
 	export PATH=~/local/python/bin:$PATH
-	export CPATH=~/local/python/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
 	echo "# Python paths
 	export PATH=~/local/python/bin:\$PATH
-	export CPATH=~/local/python/include:\$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 	rm -rf Python-3.11.1*
@@ -81,11 +79,9 @@ then
 	cmake -S llvm -B build -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel -DLLVM_ENABLE_PROJECTS="clang"
 	cd  build &&  ninja clang-format
 	export PATH=~/local/llvm-project/build/bin:$PATH
-	export CPATH=~/local/llvm-project/build/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/llvm-project/build/lib:$LD_LIBRARY_PATH
 	echo "# Clang-Format
 	export PATH=~/local/llvm-project/build/bin:\$PATH
-	export CPATH=~/local/llvm-project/build/include:\$CPATH
 	export LD_LIBRARY_PATH=~/local/llvm-project/build/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 fi
@@ -105,11 +101,9 @@ then
 	make install
 
 	export PATH=~/local/nvim/bin:$PATH
-	export CPATH=~/local/nvim/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
 	echo "# NVIM paths
 	export PATH=~/local/nvim/bin:\$PATH
-	export CPATH=~/local/nvim/include:\$CPATH
 	export LD_LIBRARY_PATH=~/local/nvim/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 
