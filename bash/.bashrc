@@ -169,3 +169,9 @@ function open() {
 }
 export -f open
 
+# nvim
+if [ -x /home/ac.pnguyen/local/nvim/bin/nvim ]; then
+  alias vim=$HOME/local/nvim/bin/nvim
+fi
+
+
