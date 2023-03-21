@@ -5,6 +5,51 @@ DDIR=$(pwd)
 cp $DDIR/bash/.bashrc ~
 cp $DDIR/tmux/.tmux.conf ~
 
+# Install  tmux
+if ! command -v tmux &> /dev/null
+then
+	mkdir -p ~/local
+	cd ~/local
+	# installing libevent
+	wget  https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+	tar -xvf libevent-2.1.12-stable.tar.gz
+	cd libevent-2.1.12-stable/
+	./autogen.sh
+	./configure --prefix=$HOME/local/libevent --disable-shared
+	make
+	make install
+	cd ..
+	rm -rf libevent-2.1.12-stable*
+	# install ncurses
+	wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
+	tar -xvf ncurses-6.4.tar.gz
+	cd ncurses-6.4/
+	./configure --prefix=$HOME/local/ncurses
+	make
+	make install
+	cd ..
+	rm -rf ncurses-6.4*
+	# install tmux
+	wget https://github.com/tmux/tmux/archive/refs/tags/3.3a.tar.gz
+	tar -xvf 3.3a.tar.gz
+	cd tmux-3.3a/
+	./autogen.sh
+	./configure --prefix=$HOME/local/tmux  CFLAGS="-I$HOME/local/libevent/include -I$HOME/local/ncurses/include" LDFLAGS="-L$HOME/local/libevent/lib -L$HOME/local/ncurses/lib"
+	CPPFLAGS="-I$HOME/local/libevent/include -I$HOME/local/ncurses/include" LDFLAGS="-static -L$HOME/local/libevent/lib -L$HOME/local/ncurses/lib" make
+	make install
+	cd ..
+	rm -rf tmux-3.3a 3.3a.tar.gz
+	export PATH=~/local/tmux/bin:$PATH
+	export CPATH=~/local/tmux/include:$CPATH
+	export LD_LIBRARY_PATH=~/local/tmux/lib:$LD_LIBRARY_PATH
+	echo "# Tmux paths
+	export PATH=~/local/tmux/bin:\$PATH
+	export CPATH=~/local/tmux/include:\$CPATH
+	export LD_LIBRARY_PATH=~/local/tmux/lib:\$LD_LIBRARY_PATH
+	" >> ~/.bashrc
+fi
+
+
 # Install python3
 if ! command -v python3 &> /dev/null \
        	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 8 ;
@@ -23,9 +68,9 @@ then
 	export CPATH=~/local/python/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
 	echo "# Python paths
-	export PATH=~/local/python/bin:$PATH
-	export CPATH=~/local/python/include:$CPATH
-	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
+	export PATH=~/local/python/bin:\$PATH
+	export CPATH=~/local/python/include:\$CPATH
+	export LD_LIBRARY_PATH=~/local/python/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 	rm -rf Python-3.11.1*
     # Install pip3
@@ -33,8 +78,8 @@ then
 	export PATH=~/.local/bin:$PATH
 	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
 	echo "# Pip3 paths
-	export PATH=~/.local/bin:$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	export PATH=~/.local/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
     rm get-pip.py
 fi
@@ -46,8 +91,8 @@ then
 	export PATH=~/.local/bin:$PATH
 	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
 	echo "# Pip3 paths
-	export PATH=~/.local/bin:$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	export PATH=~/.local/bin:$\PATH
+	export LD_LIBRARY_PATH=~/.local/lib:$\LD_LIBRARY_PATH
 	" >> ~/.bashrc
   rm get-pip.py
 fi
@@ -61,7 +106,7 @@ then
 	cd ~/local
 	git clone https://github.com/neovim/neovim.git
 	cd neovim
-    git checkout release-0.8
+	git checkout release-0.8
 	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/local/nvim -j
 	make install
 
@@ -69,9 +114,9 @@ then
 	export CPATH=~/local/nvim/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
 	echo "# NVIM paths
-	export PATH=~/local/nvim/bin:$PATH
-	export CPATH=~/local/nvim/include:$CPATH
-	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
+	export PATH=~/local/nvim/bin:\$PATH
+	export CPATH=~/local/nvim/include:\$CPATH
+	export LD_LIBRARY_PATH=~/local/nvim/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 
 	cd ~/local
