@@ -65,11 +65,10 @@ then
 	make install
 	cd ..
 	export PATH=~/local/python/bin:$PATH
-	export CPATH=~/local/python/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
 	echo "# Python paths
 	export PATH=~/local/python/bin:\$PATH
-	export CPATH=~/local/python/include:\$CPATH
+	#export CPATH=~/local/python/include:\$CPATH
 	export LD_LIBRARY_PATH=~/local/python/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 	rm -rf Python-3.11.1*
@@ -91,11 +90,50 @@ then
 	export PATH=~/.local/bin:$PATH
 	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
 	echo "# Pip3 paths
-	export PATH=~/.local/bin:$\PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$\LD_LIBRARY_PATH
+	export PATH=~/.local/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
   rm get-pip.py
 fi
+
+# Install Ninja
+if ! command -v ninja &> /dev/null
+then
+	echo "Ninja could not be found"
+	echo "Installing Ninja ..."
+	cd ~/local
+	git clone https://github.com/ninja-build/ninja.git
+	cd ninja/
+	git checkout release
+	mkdir -p build
+	cd build/
+	cmake ..
+	make -j 4
+	export PATH=~/local/ninja/build:$PATH
+	echo "# Ninja path
+	export PATH=~/local/ninja/build:\$PATH
+	" >> ~/.bashrc
+fi
+
+# Install LLVM Clang-Format
+if ! command -v clang &> /dev/null
+then
+	echo "Clang could not be found"
+	echo "Installing Clang-Format ..."
+	cd ~/local
+	git clone https://github.com/llvm/llvm-project.git
+	cd llvm-project
+	git checkout release
+	cmake -S llvm -B build -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel -DLLVM_ENABLE_PROJECTS="clang"
+	cd  build &&  ninja clang-format
+	export PATH=~/local/llvm-project/build/bin:$PATH
+	export LD_LIBRARY_PATH=~/local/llvm-project/build/lib:$LD_LIBRARY_PATH
+	echo "# Clang-Format
+	export PATH=~/local/llvm-project/build/bin:\$PATH
+	export LD_LIBRARY_PATH=~/local/llvm-project/build/lib:\$LD_LIBRARY_PATH
+	" >> ~/.bashrc
+fi
+
 
 # Install nvim
 if ! command -v nvim &> /dev/null
@@ -111,11 +149,10 @@ then
 	make install
 
 	export PATH=~/local/nvim/bin:$PATH
-	export CPATH=~/local/nvim/include:$CPATH
 	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
 	echo "# NVIM paths
 	export PATH=~/local/nvim/bin:\$PATH
-	export CPATH=~/local/nvim/include:\$CPATH
+	#export CPATH=~/local/nvim/include:\$CPATH
 	export LD_LIBRARY_PATH=~/local/nvim/lib:\$LD_LIBRARY_PATH
 	" >> ~/.bashrc
 
@@ -142,3 +179,4 @@ if [ -x "$(which nvim)" ]; then
   alias vim="$(which nvim)"
 fi
 " >> ~/.bashrc
+

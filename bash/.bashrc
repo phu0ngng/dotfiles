@@ -168,4 +168,3 @@ function open() {
   fi
 }
 export -f open
-

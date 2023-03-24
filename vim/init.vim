@@ -1,5 +1,5 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"let g:python3_host_prog = expand('/nfs/site/home/phuongn2/local/spack/opt/spack/linux-ubuntu22.04-skylake_avx512/gcc-11.2.0/python-3.9.12-anzeaau5iznpgfdhh7rwojqrregp2k4m/bin/python3')
+let g:python3_host_prog = expand('$HOME/local/python/bin/python3')
 
 " Basic Settings
 set nocompatible            " disable compatibility to old-time vi
@@ -21,6 +21,7 @@ set backspace=indent,eol,start
 "set paste
 set visualbell
 set t_vb=
+set textwidth=80
 
 "filetype off                  " required
 
@@ -73,6 +74,8 @@ endfunction
 " Grammar check
 map <Leader>g :call Grammarchk_en()<cr>
 
+" Coloring header files
+autocmd BufEnter *.inc,*.hpp :setlocal filetype=cpp
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 call plug#begin()            " required
@@ -117,6 +120,32 @@ Plug 'jonstoler/werewolf.vim'
 "Plug 'nvie/vim-flake8'
 "let python_highlight_all=1
 "syntax on
+"" Ale 
+"Syntax Checking/Highlighting
+"Plug 'dense-analysis/ale'
+"let g:ale_enabled = 0
+""let g:ale_lint_on_text_changed = 'never'
+"function! ToggleMyAle()
+"  if g:ale_enabled == 0
+"    let g:ale_linters = {'c': ['clang'], 'c++': ['dpcpp','clang', 'g++', 'clangtidy'],'python': ['flake8','pylint']}
+"    let g:ale_fixers = {'python': ['autopep8','yapf']}
+"    let g:ale_enabled = 1
+"    let g:ale_completion_enabled = 1
+"    let g:ale_lint_on_text_changed = 1
+"    ALEEnable
+"    ALELint
+"    "#    ALEComplete
+"  else
+"    let g:ale_enabled = 0
+"    let g:ale_completion_enabled = 0
+"    let g:ale_lint_on_text_changed = 'never'
+"    ALEToggle
+"    ALEDisable
+"  endif
+"endfunction
+"map <Leader>s :call ToggleMyAle()<cr>
+"map <Leader>q :ALEDetail<cr>
+
 
 "Plug 'roxma/nvim-completion-manager'
 "Plug 'SirVer/ultisnips'
@@ -184,32 +213,36 @@ au FileType fortran let fortran_more_precise=1
 au FileType fortran Plug 'rudrab/vimf90'
 
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'deoplete-plugins/deoplete-clang'
 let g:deoplete#enable_at_startup = 1
 
 """ Latex
 au FileType tex Plug 'lervag/vimtex'
 
-"""" Clang format
-"" Add maktaba and codefmt to the runtimepath.
-"" (The latter must be installed before it can be used.)
+""" Code definitions & references
+"Plug 'neovim/nvim-lspconfig'
+
+""" Clang format
+" Add maktaba and codefmt to the runtimepath.
+" (The latter must be installed before it can be used.)
 "Plug 'google/vim-maktaba'
 "Plug 'google/vim-codefmt'
 "" Also add Glaive, which is used to configure codefmt's maktaba flags. See
 "" `:help :Glaive` for usage.
 "Plug 'google/vim-glaive'
 "augroup autoformat_settings
-"  autocmd FileType bzl AutoFormatBuffer buildifier
+""  autocmd FileType bzl AutoFormatBuffer buildifier
 "  autocmd FileType c,cpp,proto,javascript,arduino AutoFormatBuffer clang-format
-"  autocmd FileType dart AutoFormatBuffer dartfmt
-"  autocmd FileType go AutoFormatBuffer gofmt
-"  autocmd FileType gn AutoFormatBuffer gn
-"  autocmd FileType html,css,sass,scss,less,json AutoFormatBuffer js-beautify
-"  autocmd FileType java AutoFormatBuffer google-java-format
+""  autocmd FileType dart AutoFormatBuffer dartfmt
+""  autocmd FileType go AutoFormatBuffer gofmt
+""  autocmd FileType gn AutoFormatBuffer gn
+""  autocmd FileType html,css,sass,scss,less,json AutoFormatBuffer js-beautify
+""  autocmd FileType java AutoFormatBuffer google-java-format
 "  autocmd FileType python AutoFormatBuffer yapf
-"  " Alternative: autocmd FileType python AutoFormatBuffer autopep8
-"  autocmd FileType rust AutoFormatBuffer rustfmt
-"  autocmd FileType vue AutoFormatBuffer prettier
-"  autocmd FileType swift AutoFormatBuffer swift-format
+"" Alternative: autocmd FileType python AutoFormatBuffer autopep8
+""  autocmd FileType rust AutoFormatBuffer rustfmt
+""  autocmd FileType vue AutoFormatBuffer prettier
+""  autocmd FileType swift AutoFormatBuffer swift-format
 "augroup END
 
 call plug#end()            " required
@@ -219,4 +252,5 @@ call plug#end()            " required
 "let g:werewolf_night_themes = ['desert']
 colorscheme dayfox
 
-
+"set clipboard=unnamedplus
+"lua require('config')
