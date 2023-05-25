@@ -5,6 +5,23 @@ DDIR=$(pwd)
 cp $DDIR/bash/.bashrc ~
 cp $DDIR/tmux/.tmux.conf ~
 
+# Install cmake
+if ! command -v cmake &> /dev/null
+then
+    wget https://github.com/Kitware/CMake/releases/download/v3.26.1/cmake-3.26.1.tar.gz
+    tar -xvf cmake-3.26.1.tar.gz
+    cd cmake-3.26.1/
+    ./bootstrap
+    ./configure --prefix=$HOME/local/cmake
+    make -j
+    make install
+
+	export PATH=~/local/cmake/bin:$PATH
+	echo "# Cmake paths
+	export PATH=~/local/cmake/bin:\$PATH
+	" >> ~/.bashrc
+fi
+
 # Install  tmux
 if ! command -v tmux &> /dev/null
 then
@@ -60,7 +77,7 @@ then
 	tar -xvf Python-3.11.1.tar.xz
 	cd Python-3.11.1/
 	mkdir -p ../python
-	./configure --prefix=$(pwd)/../python --enable-optimizations
+	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
 	make -j
 	make install
 	cd ..
