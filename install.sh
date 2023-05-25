@@ -23,7 +23,8 @@ then
 fi
 
 # Install  tmux
-if ! command -v tmux &> /dev/null
+if ! command -v tmux &> /dev/null \
+       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 3;
 then
 	mkdir -p ~/local
 	cd ~/local
@@ -183,7 +184,7 @@ sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 $(which pip3) install --user pynvim
 mkdir -p ~/.config/nvim
-cp $DDIR/vim/init.vim ~/.config/nvim/init.vim
+#cp $DDIR/vim/init.vim ~/.config/nvim/init.vim
 nvim +'PlugInstall --sync' +qa
 nvim +'UpdateRemotePlugins --sync' +qa
 
@@ -192,8 +193,9 @@ cd ~
 
 # Alias nvim with vim
 echo "# nvim
-if [ -x "$(which nvim)" ]; then
-  alias vim="$(which nvim)"
+if command -v nvim &> /dev/null
+then
+  alias vim="\$(which nvim)"
 fi
 " >> ~/.bashrc
 
