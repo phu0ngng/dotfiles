@@ -1,39 +1,48 @@
 #!/bin/bash
 
-DDIR=$(pwd)
+DotFilesDir=$(pwd)
 
-cp $DDIR/bash/.bashrc ~
-cp $DDIR/tmux/.tmux.conf ~
+cp $DotFilesDir/bash/.bashrc ~
+cp $DotFilesDir/tmux/.tmux.conf ~
+
+InsDir="local/$host"
+mkdir -p $InsDir
+
+host=$(hostname  | cut -d . -f 1)
+EnvFile=".env_$host"
+touch ~/$EnvFile
 
 # Install cmake
 if ! command -v cmake &> /dev/null
 then
-    wget https://github.com/Kitware/CMake/releases/download/v3.26.1/cmake-3.26.1.tar.gz
-    tar -xvf cmake-3.26.1.tar.gz
-    cd cmake-3.26.1/
-    ./bootstrap
-    ./configure --prefix=$HOME/local/cmake
-    make -j
-    make install
+	mkdir -p ~/$InsDir
+	cd ~/$InsDir
+	wget https://github.com/Kitware/CMake/releases/download/v3.26.1/cmake-3.26.1.tar.gz
+	tar -xvf cmake-3.26.1.tar.gz
+	cd cmake-3.26.1/
+	./bootstrap
+	./configure --prefix=$HOME/$InsDir/cmake
+	make -j
+	make install
 
-	export PATH=~/local/cmake/bin:$PATH
+	export PATH=~/$InsDir/cmake/bin:$PATH
 	echo "# Cmake paths
-	export PATH=~/local/cmake/bin:\$PATH
-	" >> ~/.bashrc
+	export PATH=~/$InsDir/cmake/bin:\$PATH
+	" >> ~/$EnvFile
 fi
 
 # Install  tmux
 if ! command -v tmux &> /dev/null \
-       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 3;
+       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 2;
 then
-	mkdir -p ~/local
-	cd ~/local
+	mkdir -p ~/$InsDir
+	cd ~/$InsDir
 	# installing libevent
 	wget  https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
 	tar -xvf libevent-2.1.12-stable.tar.gz
 	cd libevent-2.1.12-stable/
 	./autogen.sh
-	./configure --prefix=$HOME/local/libevent --disable-shared
+	./configure --prefix=$HOME/$InsDir/libevent --disable-shared
 	make
 	make install
 	cd ..
@@ -42,7 +51,7 @@ then
 	wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
 	tar -xvf ncurses-6.4.tar.gz
 	cd ncurses-6.4/
-	./configure --prefix=$HOME/local/ncurses
+	./configure --prefix=$HOME/$InsDir/ncurses
 	make
 	make install
 	cd ..
@@ -52,28 +61,28 @@ then
 	tar -xvf 3.3a.tar.gz
 	cd tmux-3.3a/
 	./autogen.sh
-	./configure --prefix=$HOME/local/tmux  CFLAGS="-I$HOME/local/libevent/include -I$HOME/local/ncurses/include" LDFLAGS="-L$HOME/local/libevent/lib -L$HOME/local/ncurses/lib"
-	CPPFLAGS="-I$HOME/local/libevent/include -I$HOME/local/ncurses/include" LDFLAGS="-static -L$HOME/local/libevent/lib -L$HOME/local/ncurses/lib" make
+	./configure --prefix=$HOME/$InsDir/tmux  CFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include" LDFLAGS="-L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib"
+	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make
 	make install
 	cd ..
 	rm -rf tmux-3.3a 3.3a.tar.gz
-	export PATH=~/local/tmux/bin:$PATH
-	export CPATH=~/local/tmux/include:$CPATH
-	export LD_LIBRARY_PATH=~/local/tmux/lib:$LD_LIBRARY_PATH
+	export PATH=~/$InsDir/tmux/bin:$PATH
+	export CPATH=~/$InsDir/tmux/include:$CPATH
+	export LD_LIBRARY_PATH=~/$InsDir/tmux/lib:$LD_LIBRARY_PATH
 	echo "# Tmux paths
-	export PATH=~/local/tmux/bin:\$PATH
-	export CPATH=~/local/tmux/include:\$CPATH
-	export LD_LIBRARY_PATH=~/local/tmux/lib:\$LD_LIBRARY_PATH
-	" >> ~/.bashrc
+	export PATH=~/$InsDir/tmux/bin:\$PATH
+	export CPATH=~/$InsDir/tmux/include:\$CPATH
+	export LD_LIBRARY_PATH=~/$InsDir/tmux/lib:\$LD_LIBRARY_PATH
+	" >> ~/$EnvFile
 fi
 
 
 # Install python3
 if ! command -v python3 &> /dev/null \
-       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 8 ;
+       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 6 ;
 then
-	mkdir -p ~/local
-	cd ~/local
+	mkdir -p ~/$InsDir
+	cd ~/$InsDir
 	wget https://www.python.org/ftp/python/3.11.1/Python-3.11.1.tar.xz
 	tar -xvf Python-3.11.1.tar.xz
 	cd Python-3.11.1/
@@ -82,22 +91,22 @@ then
 	make -j
 	make install
 	cd ..
-	export PATH=~/local/python/bin:$PATH
-	export LD_LIBRARY_PATH=~/local/python/lib:$LD_LIBRARY_PATH
+	export PATH=~/$InsDir/python/bin:$PATH
+	export LD_LIBRARY_PATH=~/$InsDir/python/lib:$LD_LIBRARY_PATH
 	echo "# Python paths
-	export PATH=~/local/python/bin:\$PATH
-	#export CPATH=~/local/python/include:\$CPATH
-	export LD_LIBRARY_PATH=~/local/python/lib:\$LD_LIBRARY_PATH
-	" >> ~/.bashrc
+	export PATH=~/$InsDir/python/bin:\$PATH
+	#export CPATH=~/$InsDir/python/include:\$CPATH
+	export LD_LIBRARY_PATH=~/$InsDir/python/lib:\$LD_LIBRARY_PATH
+	" >> ~/$EnvFile
 	rm -rf Python-3.11.1*
     # Install pip3
 	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3) get-pip.py --user
-	export PATH=~/.local/bin:$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	export PATH=~/.$InsDir/bin:$PATH
+	export LD_LIBRARY_PATH=~/.$InsDir/lib:$LD_LIBRARY_PATH
 	echo "# Pip3 paths
-	export PATH=~/.local/bin:\$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
-	" >> ~/.bashrc
+	export PATH=~/.$InsDir/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.$InsDir/lib:\$LD_LIBRARY_PATH
+	" >> ~/$EnvFile
     rm get-pip.py
 fi
 
@@ -105,12 +114,12 @@ fi
 if ! command -v pip3 &> /dev/null
 then
 	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3) get-pip.py --user
-	export PATH=~/.local/bin:$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	export PATH=~/.$InsDir/bin:$PATH
+	export LD_LIBRARY_PATH=~/.$InsDir/lib:$LD_LIBRARY_PATH
 	echo "# Pip3 paths
-	export PATH=~/.local/bin:\$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
-	" >> ~/.bashrc
+	export PATH=~/.$InsDir/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.$InsDir/lib:\$LD_LIBRARY_PATH
+	" >> ~/$EnvFile
   rm get-pip.py
 fi
 
@@ -119,7 +128,7 @@ if ! command -v ninja &> /dev/null
 then
 	echo "Ninja could not be found"
 	echo "Installing Ninja ..."
-	cd ~/local
+	cd ~/$InsDir
 	git clone https://github.com/ninja-build/ninja.git
 	cd ninja/
 	git checkout release
@@ -127,29 +136,29 @@ then
 	cd build/
 	cmake ..
 	make -j 4
-	export PATH=~/local/ninja/build:$PATH
+	export PATH=~/$InsDir/ninja/build:$PATH
 	echo "# Ninja path
-	export PATH=~/local/ninja/build:\$PATH
-	" >> ~/.bashrc
+	export PATH=~/$InsDir/ninja/build:\$PATH
+	" >> ~/$EnvFile
 fi
 
-# Install LLVM Clang-Format
+# Install LLVM Clang
 if ! command -v clang &> /dev/null
 then
 	echo "Clang could not be found"
-	echo "Installing Clang-Format ..."
-	cd ~/local
+	echo "Installing Clang ..."
+	cd ~/$InsDir
 	git clone https://github.com/llvm/llvm-project.git
 	cd llvm-project
 	git checkout release
 	cmake -S llvm -B build -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel -DLLVM_ENABLE_PROJECTS="clang"
-	cd  build &&  ninja clang-format
-	export PATH=~/local/llvm-project/build/bin:$PATH
-	export LD_LIBRARY_PATH=~/local/llvm-project/build/lib:$LD_LIBRARY_PATH
+	cd  build &&  ninja
+	export PATH=~/$InsDir/llvm-project/build/bin:$PATH
+	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:$LD_LIBRARY_PATH
 	echo "# Clang-Format
-	export PATH=~/local/llvm-project/build/bin:\$PATH
-	export LD_LIBRARY_PATH=~/local/llvm-project/build/lib:\$LD_LIBRARY_PATH
-	" >> ~/.bashrc
+	export PATH=~/$InsDir/llvm-project/build/bin:\$PATH
+	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:\$LD_LIBRARY_PATH
+	" >> ~/$EnvFile
 fi
 
 
@@ -158,44 +167,32 @@ if ! command -v nvim &> /dev/null
 then
 	echo "Nvim could not be found"
 	echo "Installing Nvim ..."
-	mkdir -p ~/local
-	cd ~/local
+	mkdir -p ~/$InsDir
+	cd ~/$InsDir
 	git clone https://github.com/neovim/neovim.git
 	cd neovim
 	git checkout release-0.8
-	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/local/nvim -j
+	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/$InsDir/nvim -j
 	make install
 
-	export PATH=~/local/nvim/bin:$PATH
-	export LD_LIBRARY_PATH=~/local/nvim/lib:$LD_LIBRARY_PATH
+	export PATH=~/$InsDir/nvim/bin:$PATH
+	export LD_LIBRARY_PATH=~/$InsDir/nvim/lib:$LD_LIBRARY_PATH
 	echo "# NVIM paths
-	export PATH=~/local/nvim/bin:\$PATH
-	#export CPATH=~/local/nvim/include:\$CPATH
-	export LD_LIBRARY_PATH=~/local/nvim/lib:\$LD_LIBRARY_PATH
-	" >> ~/.bashrc
+	export PATH=~/$InsDir/nvim/bin:\$PATH
+	#export CPATH=~/$InsDir/nvim/include:\$CPATH
+	export LD_LIBRARY_PATH=~/$InsDir/nvim/lib:\$LD_LIBRARY_PATH
+	" >> ~/$EnvFile
 
-	cd ~/local
+	cd ~/$InsDir
 	rm -rf neovim/
 	echo "... Done"
 fi
 
 # Install nvim plugin
-sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
-       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-$(which pip3) install --user pynvim
+#$(which pip3) install --user pynvim
 mkdir -p ~/.config/nvim
-#cp $DDIR/vim/init.vim ~/.config/nvim/init.vim
-nvim +'PlugInstall --sync' +qa
-nvim +'UpdateRemotePlugins --sync' +qa
+cp -r $DotFilesDir/nvim/* ~/.config/nvim/
 
 echo "Done\n"
 cd ~
-
-# Alias nvim with vim
-echo "# nvim
-if command -v nvim &> /dev/null
-then
-  alias vim="\$(which nvim)"
-fi
-" >> ~/.bashrc
 

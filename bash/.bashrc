@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# ~/.bashrc: executed by bash(1) for non-login shells.
-# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-# for examples
-#export PATH=$PATH:/home/bichphuong/matlab/bin
-
 #### for spack
 #export SPACK_ROOT=/home/bichphuong/spack
 #export PATH=$SPACK_ROOT/bin:$PATH
@@ -15,20 +10,7 @@
 #module unuse $SPACK_ROOT/share/modules/linux-ubuntu20.04-skylake 
 #module use $SPACK_ROOT/share/lmod/linux-ubuntu20.04-x86_64/Core/
 
-#### For ibus-unikey
-export GTK_IM_MODULE=ibus
-export XMODIFIERS=@im=ibus
-export QT_IM_MODULE=ibus
-
-#### Java
- #If not running interactively, don't do anything
-case $- in
-    *i*) ;;
-      *) return;;
-esac
-
 # don't put duplicate lines or lines starting with space in the history.
-# See bash(1) for more options
 HISTCONTROL=ignoreboth
 
 # append to the history file, don't overwrite it
@@ -113,7 +95,7 @@ alias l='ls -CF'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+#alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -168,3 +150,13 @@ function open() {
   fi
 }
 export -f open
+
+# nvim
+if command -v nvim &> /dev/null
+then
+  alias vim="$(which nvim)"
+fi
+
+# Env PATH
+host=$(hostname  | cut -d . -f 1)
+. ~/.env_$host

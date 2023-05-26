@@ -43,6 +43,4 @@ vim.opt.isfname:append("@-@")
 vim.opt.updatetime = 50
 
 vim.opt.tw = 120
---vim.opt.fo 
---local list = {"80",}; for i=120, 256 do table.insert(list, i) end
---vim.opt.colorcolumn = list
+vim.opt.hlsearch = true
