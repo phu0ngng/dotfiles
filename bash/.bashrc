@@ -154,7 +154,7 @@ export -f open
 # nvim
 if command -v nvim &> /dev/null
 then
-  alias vim="$(which nvim)"
+  alias vim=\$(which nvim)
 fi
 
 # Env PATH
