@@ -5,10 +5,10 @@ DotFilesDir=$(pwd)
 cp $DotFilesDir/bash/.bashrc ~
 cp $DotFilesDir/tmux/.tmux.conf ~
 
+host=$(hostname  | cut -d . -f 1)
 InsDir="local/$host"
 mkdir -p $InsDir
 
-host=$(hostname  | cut -d . -f 1)
 EnvFile=".env_$host"
 touch ~/$EnvFile
 
@@ -128,6 +128,7 @@ if ! command -v ninja &> /dev/null
 then
 	echo "Ninja could not be found"
 	echo "Installing Ninja ..."
+	mkdir -p ~/$InsDir
 	cd ~/$InsDir
 	git clone https://github.com/ninja-build/ninja.git
 	cd ninja/
@@ -189,7 +190,6 @@ then
 fi
 
 # Install nvim plugin
-#$(which pip3) install --user pynvim
 mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
 
