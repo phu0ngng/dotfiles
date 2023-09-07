@@ -6,7 +6,7 @@ vim.keymap.set('n', '<leader>se', function()
   vim.api.nvim_command('GrammarousCheck --lang="en_us"')
 end, {desc = 'Set spelling to English'})
 
-vim.keymap.set('n', '<leader>sd', function()
+vim.keymap.set('n', '<leader>sg', function()
   vim.opt.spell=true
   vim.opt.spelllang="de_de"
   print("Set spell check to German.")

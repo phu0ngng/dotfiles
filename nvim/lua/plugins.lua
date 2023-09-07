@@ -19,17 +19,17 @@ local plugins = {
   {'EdenEast/nightfox.nvim'},
   --- Color changes based on background
   {'lnhrnndz/xresources-nvim'},
-  {'nvim-tree/nvim-web-devicons'}, -- For icons
+  {'kyazdani42/nvim-web-devicons'}, -- For icons
   --- Plugin Manager in separated config files
   {'wbthomason/packer.nvim'},
   --- Tmux navigator
   { 'christoomey/vim-tmux-navigator',  name = 'tmux-navigator'},
   --- Lualine (bottom bar)
-  { 'nvim-lualine/lualine.nvim', dependencies = {'nvim-tree/nvim-web-devicons'}},
+  { 'nvim-lualine/lualine.nvim', dependencies = {'kyazdani42/nvim-web-devicons'}},
   --- Highlighting
-  {'nvim-treesitter/nvim-treesitter', run = ":TSUpdate"},
+  {'nvim-treesitter/nvim-treesitter'},
   --- File explorer
-  {'nvim-tree/nvim-tree.lua'},
+  {'kyazdani42/nvim-tree.lua'},
   --- Save undo as a tree
   {'mbbill/undotree'},
   --- Git signs / decorations
@@ -38,20 +38,23 @@ local plugins = {
   {'RishabhRD/nvim-cheat.sh', name = 'cheat', dependencies = {'RishabhRD/popfix'}},
 
   --- Autocompletion with cmp
+  {'hrsh7th/cmp-cmdline'}, -- cmdline completions
+  {'saadparwaiz1/cmp_luasnip'}, -- snippet completions
   {'hrsh7th/nvim-cmp'}, -- The completion plugin
   {'hrsh7th/cmp-buffer'}, -- buffer completions
   {'hrsh7th/cmp-path'}, -- path completions
-  {'hrsh7th/cmp-cmdline'}, -- cmdline completions
-  {'saadparwaiz1/cmp_luasnip'}, -- snippet completions
 
-  --snippets
+  --- Snippets
   {'L3MON4D3/LuaSnip'}, --snippet engine
   {'rafamadriz/friendly-snippets'}, -- a bunch of snippets to use
 
-  -- Autopairs
+  --- Function signature
+  {'ray-x/lsp_signature.nvim'},
+
+  --- Autopairs
   {'windwp/nvim-autopairs'}, --Autopairs, integrates with both cmp and treesitter
 
-  -- Easy comments
+  --- Easy comments
   {'numToStr/Comment.nvim'},
   {'JoosepAlviste/nvim-ts-context-commentstring'},
 
@@ -62,10 +65,10 @@ local plugins = {
   {'nvim-lua/plenary.nvim'},
   {'jose-elias-alvarez/null-ls.nvim'},
 
-  -- Telescope
-  {'nvim-telescope/telescope.nvim', tag = '0.1.0', dependencies = {'nvim-lua/plenary.nvim'}},
-  {'nvim-lua/popup.nvim'}, --Popup API 
-  {'nvim-telescope/telescope-media-files.nvim'},
+  ---- Telescope
+  {'nvim-telescope/telescope.nvim'},
+  --{'nvim-lua/popup.nvim'}, --Popup API 
+  --{'nvim-telescope/telescope-media-files.nvim'},
 
   -- Indentline
   {'lukas-reineke/indent-blankline.nvim'},
@@ -74,6 +77,12 @@ local plugins = {
   {'rhysd/vim-grammarous',lazy=false, name='grammarous'},
   --- Open files at your last edit position
   {'farmergreg/vim-lastplace'},
+
+  --- Bufferline for open vim files
+  {'akinsho/bufferline.nvim'},
+
+  --- Cheatsheet for keymaps
+  {'folke/which-key.nvim'}
 
   -- Auto folds TODO
 }

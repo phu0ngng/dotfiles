@@ -42,6 +42,6 @@ vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
 
-vim.opt.tw = 120
+vim.opt.tw = 80
 vim.opt.hlsearch = true
 vim.api.nvim_create_autocmd("BufEnter", { pattern = "*.inc,*.hpp", command = [[setlocal filetype=cpp]] })
