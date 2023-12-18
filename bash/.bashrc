@@ -38,3 +38,20 @@ fi
 # Env PATH
 host=$(hostname  | cut -d . -f 1)
 [ -f ~/.env_$host ] && . ~/.env_$host
+
+
+# Open function
+function open() {
+  if [ -n "$(which xdg-open 2>/dev/null)" ]; then
+    if [ -z "$1" -o "$1" == "-h" -o "$1" == "--help"  ];then
+      echo "open function/script, as standin for NextSteps 'open'"
+      echo "Using $(which xdg-open)"
+      echo "To see full script type \'type open\'"
+    fi
+  elif [ -n "$(which cygstart 2>/dev/null)" ]; then
+    cygstart $1
+  else #no xdg-open nor cygstart Should be NextSteps(MacOSX)
+    /usr/bin/open $1
+  fi
+}
+export -f open
