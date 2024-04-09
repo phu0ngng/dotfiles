@@ -3,6 +3,7 @@ vim.g.maplocalleader = ','
 
 vim.o.netrw_silent=1
 vim.o.cmdheight=0
+--[[ vim.g.python3_host_prog='/usr/bin/python3.10' ]]
 
 vim.opt.backspace = '2'
 vim.opt.showcmd = true
@@ -42,6 +43,6 @@ vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
 
-vim.opt.tw = 80
+vim.opt.tw = 100
 vim.opt.hlsearch = true
 vim.api.nvim_create_autocmd("BufEnter", { pattern = "*.inc,*.hpp", command = [[setlocal filetype=cpp]] })

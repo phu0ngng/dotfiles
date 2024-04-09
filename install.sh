@@ -79,7 +79,7 @@ fi
 
 # Install python3
 if ! command -v python3 &> /dev/null \
-       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 6 ;
+       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 10 ;
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
@@ -192,7 +192,9 @@ fi
 # Install nvim plugin
 mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
-
+pip install neovim flake8
+pip install "python-lsp-server[all]"
+pip install -U setuptools
 echo "Done\n"
 cd ~
 

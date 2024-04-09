@@ -2,9 +2,8 @@
 local servers = {
   "lua_ls",
   "clangd",
-  "pylsp",
   "texlab",
-  "cmake"
+  --[[ "pylsp" ]]
 }
 
 local settings = {
@@ -21,10 +20,10 @@ local settings = {
 }
 
 require("mason").setup(settings)
-require("mason-lspconfig").setup({
-	ensure_installed = servers,
-	automatic_installation = true,
-})
+--[[ require("mason-lspconfig").setup({ ]]
+--[[ 	ensure_installed = servers, ]]
+--[[ 	automatic_installation = true, ]]
+--[[ }) ]]
 
 local lspconfig_status_ok, lspconfig = pcall(require, "lspconfig")
 if not lspconfig_status_ok then
@@ -32,7 +31,6 @@ if not lspconfig_status_ok then
 end
 
 local opts = {}
-
 for _, server in pairs(servers) do
 	opts = {
 		on_attach = require("plugin_config.lsp.handlers").on_attach,

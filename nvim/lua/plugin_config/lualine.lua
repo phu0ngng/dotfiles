@@ -8,6 +8,17 @@ elseif true then
     llt='ayu'
 end
 
+local function diff_source()
+  local gitsigns = vim.b.gitsigns_status_dict
+  if gitsigns then
+    return {
+      added = gitsigns.added,
+      modified = gitsigns.changed,
+      removed = gitsigns.removed
+    }
+  end
+end
+
 require'lualine'.setup {
     options = {
     icons_enabled = true,
@@ -30,8 +41,8 @@ require'lualine'.setup {
   sections = {
     lualine_a = {'mode'},
     lualine_b = {'branch'},
-    lualine_c = {'diff'},
-    ---lualine_x = {'filetype', 'filename'},
+    lualine_c = {{'diff', source = diff_source}, },
+    lualine_x = {'filetype', 'filename'},
     lualine_x = {{'filename', path = 1}},
     lualine_y = {'progress','location'},
     lualine_z = {'searchcount'}
