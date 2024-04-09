@@ -170,11 +170,15 @@ then
 	echo "Installing Nvim ..."
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	git clone https://github.com/neovim/neovim.git
-	cd neovim
-	git checkout release-0.8
-	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/$InsDir/nvim -j
-	make install
+#	git clone https://github.com/neovim/neovim.git
+#	cd neovim
+#	git checkout release-0.8
+#	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/$InsDir/nvim -j
+#	make install
+
+	wget https://github.com/neovim/neovim/releases/latest/download/nvim-linux64.tar.gz
+	tar -xvf nvim-linux64.tar.gz
+	mv nvim-linux64 nvim
 
 	export PATH=~/$InsDir/nvim/bin:$PATH
 	export LD_LIBRARY_PATH=~/$InsDir/nvim/lib:$LD_LIBRARY_PATH
@@ -184,8 +188,6 @@ then
 	export LD_LIBRARY_PATH=~/$InsDir/nvim/lib:\$LD_LIBRARY_PATH
 	" >> ~/$EnvFile
 
-	cd ~/$InsDir
-	rm -rf neovim/
 	echo "... Done"
 fi
 
