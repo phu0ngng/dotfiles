@@ -22,7 +22,7 @@ then
 	cd cmake-3.26.1/
 	./bootstrap
 	./configure --prefix=$HOME/$InsDir/cmake
-	make -j
+	make -j 2
 	make install
 
 	export PATH=~/$InsDir/cmake/bin:$PATH
@@ -43,7 +43,7 @@ then
 	cd libevent-2.1.12-stable/
 	./autogen.sh
 	./configure --prefix=$HOME/$InsDir/libevent --disable-shared
-	make
+	make -j 2
 	make install
 	cd ..
 	rm -rf libevent-2.1.12-stable*
@@ -52,7 +52,7 @@ then
 	tar -xvf ncurses-6.4.tar.gz
 	cd ncurses-6.4/
 	./configure --prefix=$HOME/$InsDir/ncurses
-	make
+	make -j 2
 	make install
 	cd ..
 	rm -rf ncurses-6.4*
@@ -62,7 +62,7 @@ then
 	cd tmux-3.3a/
 	./autogen.sh
 	./configure --prefix=$HOME/$InsDir/tmux  CFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include" LDFLAGS="-L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib"
-	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make
+	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make -j 2
 	make install
 	cd ..
 	rm -rf tmux-3.3a 3.3a.tar.gz
@@ -79,16 +79,16 @@ fi
 
 # Install python3
 if ! command -v python3 &> /dev/null \
-       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 10 ;
+       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 12 ;
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget https://www.python.org/ftp/python/3.11.1/Python-3.11.1.tar.xz
-	tar -xvf Python-3.11.1.tar.xz
-	cd Python-3.11.1/
+	wget https://www.python.org/ftp/python/3.12.3/Python-3.12.3.tar.xz
+	tar -xvf Python-3.12.3.tar.xz
+	cd Python-3.12.3/
 	mkdir -p ../python
 	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
-	make -j
+	make -j 2
 	make install
 	cd ..
 	export PATH=~/$InsDir/python/bin:$PATH
@@ -98,16 +98,16 @@ then
 	#export CPATH=~/$InsDir/python/include:\$CPATH
 	export LD_LIBRARY_PATH=~/$InsDir/python/lib:\$LD_LIBRARY_PATH
 	" >> ~/$EnvFile
-	rm -rf Python-3.11.1*
+	# rm -rf Python-3.12.3*
     # Install pip3
-	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3) get-pip.py --user
-	export PATH=~/.$InsDir/bin:$PATH
-	export LD_LIBRARY_PATH=~/.$InsDir/lib:$LD_LIBRARY_PATH
-	echo "# Pip3 paths
-	export PATH=~/.$InsDir/bin:\$PATH
-	export LD_LIBRARY_PATH=~/.$InsDir/lib:\$LD_LIBRARY_PATH
-	" >> ~/$EnvFile
-    rm get-pip.py
+	# wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3.12) get-pip.py --user
+	# export PATH=~/.local/bin:$PATH
+	# export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	echo "# Pip packages
+	export PATH=~/.local/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
+	# " >> ~/$EnvFile
+ #    rm get-pip.py
 fi
 
 # Install pip3
@@ -136,7 +136,7 @@ then
 	mkdir -p build
 	cd build/
 	cmake ..
-	make -j 4
+	make -j 2
 	export PATH=~/$InsDir/ninja/build:$PATH
 	echo "# Ninja path
 	export PATH=~/$InsDir/ninja/build:\$PATH
@@ -144,23 +144,23 @@ then
 fi
 
 # Install LLVM Clang
-if ! command -v clang &> /dev/null
-then
-	echo "Clang could not be found"
-	echo "Installing Clang ..."
-	cd ~/$InsDir
-	git clone https://github.com/llvm/llvm-project.git
-	cd llvm-project
-	git checkout release
-	cmake -S llvm -B build -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel -DLLVM_ENABLE_PROJECTS="clang"
-	cd  build &&  ninja
-	export PATH=~/$InsDir/llvm-project/build/bin:$PATH
-	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:$LD_LIBRARY_PATH
-	echo "# Clang-Format
-	export PATH=~/$InsDir/llvm-project/build/bin:\$PATH
-	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:\$LD_LIBRARY_PATH
-	" >> ~/$EnvFile
-fi
+#if ! command -v clang &> /dev/null
+#then
+#	echo "Clang could not be found"
+#	echo "Installing Clang ..."
+#	cd ~/$InsDir
+#	git clone https://github.com/llvm/llvm-project.git
+#	cd llvm-project
+#	git checkout release
+#	cmake -S llvm -B build -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel -DLLVM_ENABLE_PROJECTS="clang"
+#	cd  build &&  ninja
+#	export PATH=~/$InsDir/llvm-project/build/bin:$PATH
+#	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:$LD_LIBRARY_PATH
+#	echo "# Clang-Format
+#	export PATH=~/$InsDir/llvm-project/build/bin:\$PATH
+#	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:\$LD_LIBRARY_PATH
+#	" >> ~/$EnvFile
+#fi
 
 
 # Install nvim
@@ -194,9 +194,10 @@ fi
 # Install nvim plugin
 mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
-pip install neovim flake8
-pip install "python-lsp-server[all]"
-pip install -U setuptools
+echo "vim.g.python3_host_prog=$(which python3)" >> ~/.config/nvim/lua/options.lua
+
+pip3 install neovim flake8 black prettier
+pip3 install "python-lsp-server[all]" -U setuptools cpplint
 echo "Done\n"
 cd ~
 

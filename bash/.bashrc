@@ -58,4 +58,3 @@ export -f open
 
 mkdir -p ~/.cache/tmux
 export TMUX_TMPDIR=~/.cache/tmux
-export PATH=~/.local/bin:$PATH

@@ -3,7 +3,6 @@ vim.g.maplocalleader = ','
 
 vim.o.netrw_silent=1
 vim.o.cmdheight=0
---[[ vim.g.python3_host_prog='/usr/bin/python3.10' ]]
 
 vim.opt.backspace = '2'
 vim.opt.showcmd = true
@@ -13,9 +12,9 @@ vim.opt.cursorline = true
 vim.opt.autoread = true
 
 -- use spaces for tabs and whatnot
-vim.opt.tabstop = 2
-vim.opt.softtabstop = 2
-vim.opt.shiftwidth = 2
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
+vim.opt.shiftwidth = 4
 vim.opt.shiftround = true
 vim.opt.expandtab = true
 vim.opt.smartindent = true
@@ -45,4 +44,5 @@ vim.opt.updatetime = 50
 
 vim.opt.tw = 100
 vim.opt.hlsearch = true
-vim.api.nvim_create_autocmd("BufEnter", { pattern = "*.inc,*.hpp", command = [[setlocal filetype=cpp]] })
+vim.api.nvim_create_autocmd("BufEnter", { pattern = "*.inc,*.hpp,*.cu, *.h", command = [[setlocal filetype=cpp]] })
+

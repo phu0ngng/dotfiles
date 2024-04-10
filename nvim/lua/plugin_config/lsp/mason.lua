@@ -3,7 +3,7 @@ local servers = {
   "lua_ls",
   "clangd",
   "texlab",
-  --[[ "pylsp" ]]
+  "pylsp"
 }
 
 local settings = {
