@@ -24,6 +24,7 @@ then
 	./configure --prefix=$HOME/$InsDir/cmake
 	make -j 2
 	make install
+	rm cmake-3.26.1.*
 
 	export PATH=~/$InsDir/cmake/bin:$PATH
 	echo "# Cmake paths
@@ -33,7 +34,7 @@ fi
 
 # Install  tmux
 if ! command -v tmux &> /dev/null \
-       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 4;
+       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 3;
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
