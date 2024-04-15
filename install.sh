@@ -2,10 +2,11 @@
 
 DotFilesDir=$(pwd)
 
-cp $DotFilesDir/bash/.bashrc ~
-cp $DotFilesDir/tmux/.tmux.conf ~
+#cp $DotFilesDir/bash/.bashrc ~
+#cp $DotFilesDir/tmux/.tmux.conf ~
 
-host=$(hostname  | cut -d . -f 1)
+# host=$(hostname  | cut -d . -f 1)
+host=dlcluster-login-03
 InsDir="local/$host"
 mkdir -p $InsDir
 
@@ -33,7 +34,7 @@ fi
 
 # Install  tmux
 if ! command -v tmux &> /dev/null \
-       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 2;
+       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 4;
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
@@ -57,15 +58,15 @@ then
 	cd ..
 	rm -rf ncurses-6.4*
 	# install tmux
-	wget https://github.com/tmux/tmux/archive/refs/tags/3.3a.tar.gz
-	tar -xvf 3.3a.tar.gz
-	cd tmux-3.3a/
+	wget https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz
+	tar -xvf tmux-3.4.tar.gz
+	cd tmux-3.4/
 	./autogen.sh
-	./configure --prefix=$HOME/$InsDir/tmux  CFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include" LDFLAGS="-L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib"
-	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make -j 2
+	./configure --prefix=$HOME/$InsDir/tmux  CFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib"
+	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make -j 2
 	make install
 	cd ..
-	rm -rf tmux-3.3a 3.3a.tar.gz
+	rm -rf tmux-3.4 tmux-3.4.tar.gz
 	export PATH=~/$InsDir/tmux/bin:$PATH
 	export CPATH=~/$InsDir/tmux/include:$CPATH
 	export LD_LIBRARY_PATH=~/$InsDir/tmux/lib:$LD_LIBRARY_PATH
@@ -98,7 +99,7 @@ then
 	#export CPATH=~/$InsDir/python/include:\$CPATH
 	export LD_LIBRARY_PATH=~/$InsDir/python/lib:\$LD_LIBRARY_PATH
 	" >> ~/$EnvFile
-	# rm -rf Python-3.12.3*
+	rm -rf Python-3.12.3*
     # Install pip3
 	# wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3.12) get-pip.py --user
 	# export PATH=~/.local/bin:$PATH
@@ -195,7 +196,7 @@ fi
 mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
 echo "vim.g.python3_host_prog=$(which python3)" >> ~/.config/nvim/lua/options.lua
-
+#
 pip3 install neovim flake8 black prettier
 pip3 install "python-lsp-server[all]" -U setuptools cpplint
 echo "Done\n"

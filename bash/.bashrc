@@ -59,3 +59,5 @@ export -f open
 
 mkdir -p ~/.cache/tmux
 export TMUX_TMPDIR=~/.cache/tmux
+export EDITOR='nvim'
+export VISUAL='nvim'
