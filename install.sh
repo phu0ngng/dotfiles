@@ -2,11 +2,10 @@
 
 DotFilesDir=$(pwd)
 
-#cp $DotFilesDir/bash/.bashrc ~
-#cp $DotFilesDir/tmux/.tmux.conf ~
+cp $DotFilesDir/bash/.bashrc ~
+cp $DotFilesDir/tmux/.tmux.conf ~
 
-# host=$(hostname  | cut -d . -f 1)
-host=dlcluster-login-03
+ host=$(hostname  | cut -d . -f 1)
 InsDir="local/$host"
 mkdir -p $InsDir
 
