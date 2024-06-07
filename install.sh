@@ -5,7 +5,7 @@ DotFilesDir=$(pwd)
 cp $DotFilesDir/bash/.bashrc ~
 cp $DotFilesDir/tmux/.tmux.conf ~
 
- host=$(hostname  | cut -d . -f 1)
+host=$(hostname  | cut -d - -f 1 | cut -d . -f 1)
 InsDir="local/$host"
 mkdir -p $InsDir
 
@@ -101,14 +101,14 @@ then
 	" >> ~/$EnvFile
 	rm -rf Python-3.12.3*
     # Install pip3
-	# wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3.12) get-pip.py --user
-	# export PATH=~/.local/bin:$PATH
-	# export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
+	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3.12) get-pip.py --user
+	export PATH=~/.local/bin:$PATH
+	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
 	echo "# Pip packages
 	export PATH=~/.local/bin:\$PATH
 	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
-	# " >> ~/$EnvFile
- #    rm get-pip.py
+	 " >> ~/$EnvFile
+   rm get-pip.py
 fi
 
 # Install pip3

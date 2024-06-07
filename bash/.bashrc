@@ -57,7 +57,7 @@ function open() {
 }
 export -f open
 
-mkdir -p ~/.cache/tmux
-export TMUX_TMPDIR=~/.cache/tmux
+export TMUX_TMPDIR=~/.cache_$host/tmux
+mkdir -p $TMUX_TMPDIR
 export EDITOR='nvim'
 export VISUAL='nvim'
