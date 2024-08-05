@@ -12,11 +12,11 @@ local diagnostics = null_ls.builtins.diagnostics
 null_ls.setup({
 	debug = false,
 	sources = {
-		formatting.prettier.with({ extra_args = { "--no-semi", "--single-quote", "--jsx-single-quote" } }),
-		formatting.black.with({ extra_args = { "--fast" } }),
+		formatting.prettier.with({args = { "--no-semi", "--single-quote", "--jsx-single-quote" } }),
+		formatting.black.with({ args = { "--fast" } }),
 		formatting.stylua,
     diagnostics.pylint,
-    diagnostics.cpplint.with({ extra_args = { "—filter", "-legal/copyright" } }),
+    diagnostics.cpplint.with({args = { "—filter", "-legal/copyright", "--linelength=120" } }),
     --[[ diagnostics.flake8, ]]
 	},
 })
