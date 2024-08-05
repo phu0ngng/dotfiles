@@ -1,6 +1,8 @@
-FROM gitlab-master.nvidia.com/dl/dgx/pytorch:master-py3-devel
-# FROM nvcr.io/nvidia/pytorch:24.05-py3
-RUN pip install pybind11 ninja
+FROM gitlab-master.nvidia.com/dl/dgx/pytorch:blackwell-py3-devel 
+RUN pip install pybind11 pytest ninja
+# RUN apt-get update -y
+# RUN apt-get install gdb -y
+# RUN apt-get install python3-dbg -y
 
 ARG NEW_USER
 ARG NEW_UID

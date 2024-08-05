@@ -5,7 +5,7 @@ if [ -z "${FRAMEWORK}" ]; then
 fi
 
 CONTAINER="te-${FRAMEWORK}"
-CONTAINER_NAME="${CONTAINER}-container"
+CONTAINER_NAME="${CONTAINER}-ct"
 
 BASE_DIR="${WORKSPACE}/te-${FRAMEWORK}"
 
@@ -18,8 +18,12 @@ docker build \
 
 nvidia-docker run --name ${CONTAINER_NAME} \
   -ti --net=host  --ipc=host \
-  -v "${BASE_DIR}":"/home/$(whoami)/te"  \
+  -v "${BASE_DIR}":"/home/$(whoami)/te" \
   --entrypoint bash \
   --privileged $CONTAINER 
+  # -v "${WORKSPACE}/te-xla":"/home/$(whoami)/xla" \
+  # -v "${WORKSPACE}/jax":"/home/$(whoami)/jax" \
+  # -v "${WORKSPACE}/te-workspace/sf_kernel":"/home/$(whoami)/sf_kernel" \
+  # -v "${WORKSPACE}/cublasLt":"/home/$(whoami)/cublasLt" \
   
 set +x
