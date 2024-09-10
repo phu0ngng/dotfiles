@@ -9,7 +9,8 @@ RUN apt-get install gdb python3-dbg -y
 ARG NEW_USER
 ARG NEW_UID
 ARG NEW_GID
-RUN useradd ${NEW_USER} -s /bin/bash -u${NEW_UID} -g${NEW_GID} -d/home/${NEW_USER}
+RUN groupadd -g ${NEW_GID} ${NEW_USER}
+RUN useradd -m -g${NEW_GID} ${NEW_USER} -u${NEW_UID} -d/home/${NEW_USER} -s /bin/bash
 RUN usermod -aG sudo ${NEW_USER}
 RUN echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 

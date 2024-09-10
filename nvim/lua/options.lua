@@ -1,7 +1,7 @@
 vim.g.mapleader = ','
 vim.g.maplocalleader = ','
 
-vim.o.netrw_silent=1
+--[[ vim.o.netrw_silent=1 ]]
 vim.o.cmdheight=0
 
 vim.opt.backspace = '2'
