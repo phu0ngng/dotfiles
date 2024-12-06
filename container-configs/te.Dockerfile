@@ -3,6 +3,7 @@ ARG IMAGE
 FROM ${IMAGE} 
 RUN pip install pybind11 pytest ninja
 RUN apt-get update -y
+RUN apt --fix-broken install -y
 RUN apt-get install sudo -y
 RUN apt-get install gdb python3-dbg -y
 
@@ -20,3 +21,5 @@ WORKDIR /home/${NEW_USER}
 ENV PATH="~/.local/bin:$PATH"
 ENV LD_LIBRARY_PATH="/home/${NEW_USER}/cudnn/lib64:$LD_LIBRARY_PATH"
 ENV NVTE_BUILD_THREADS_PER_JOB=2
+ENV NVTE_BUILD_DEBUG=1
+ENV NVTE_FRAMEWORK=none
