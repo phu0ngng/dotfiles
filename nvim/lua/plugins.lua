@@ -33,7 +33,7 @@ local plugins = {
   --- Save undo as a tree
   {'mbbill/undotree'},
   --- Git signs / decorations
-  --- {'lewis6991/gitsigns.nvim', tag='v0.6' },
+  {'lewis6991/gitsigns.nvim', tag='v0.6' },
   --- Search for whatever codesnip online in a separated window
   {'RishabhRD/nvim-cheat.sh', name = 'cheat', dependencies = {'RishabhRD/popfix'}},
 
@@ -82,7 +82,7 @@ local plugins = {
   {'akinsho/bufferline.nvim'},
 
   --- Cheatsheet for keymaps
-  {'folke/which-key.nvim'}
+  --[[ {'folke/which-key.nvim'} ]]
 
   -- Auto folds TODO
 }
