@@ -22,7 +22,7 @@ then
 	cd cmake-3.26.1/
 	./bootstrap
 	./configure --prefix=$HOME/$InsDir/cmake
-	make -j 2
+	make -j
 	make install
 	rm cmake-3.26.1.*
 
@@ -34,7 +34,7 @@ fi
 
 # Install  tmux
 if ! command -v tmux &> /dev/null \
-       	|| test $(tmux -V | grep -o [0-9] | head -1) -lt 3;
+    || test $(tmux -V | grep -oE '[0-9]+\.[0-9]+' | head -1 | awk -F. '$1 < 3 || $1 == 3 && $2 < 4');
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
@@ -42,9 +42,8 @@ then
 	wget  https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
 	tar -xvf libevent-2.1.12-stable.tar.gz
 	cd libevent-2.1.12-stable/
-	./autogen.sh
-	./configure --prefix=$HOME/$InsDir/libevent --disable-shared
-	make -j 2
+	./configure --prefix=$HOME/$InsDir/libevent --disable-shared --disable-openssl
+	make -j
 	make install
 	cd ..
 	rm -rf libevent-2.1.12-stable*
@@ -53,7 +52,7 @@ then
 	tar -xvf ncurses-6.4.tar.gz
 	cd ncurses-6.4/
 	./configure --prefix=$HOME/$InsDir/ncurses
-	make -j 2
+	make -j
 	make install
 	cd ..
 	rm -rf ncurses-6.4*
@@ -61,7 +60,6 @@ then
 	wget https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz
 	tar -xvf tmux-3.4.tar.gz
 	cd tmux-3.4/
-	./autogen.sh
 	./configure --prefix=$HOME/$InsDir/tmux  CFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib"
 	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make -j 2
 	make install
@@ -89,7 +87,7 @@ then
 	cd Python-3.12.3/
 	mkdir -p ../python
 	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
-	make -j 2
+	make -j
 	make install
 	cd ..
 	export PATH=~/$InsDir/python/bin:$PATH
@@ -137,7 +135,7 @@ then
 	mkdir -p build
 	cd build/
 	cmake ..
-	make -j 2
+	make -j
 	export PATH=~/$InsDir/ninja/build:$PATH
 	echo "# Ninja path
 	export PATH=~/$InsDir/ninja/build:\$PATH
