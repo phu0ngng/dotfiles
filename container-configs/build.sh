@@ -15,19 +15,16 @@ BASE_DIR="${WORKSPACE}/te-${TE}"
 
 case "$IMAGE" in
   "jax")
-    IMAGE_LINK="ghcr.io/nvidia/jax:jax"
-    ;;
-  "torch")
-    # IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:master-py3-devel"
-    # IMAGE_LINK="gitlab-master.nvidia.com:5005/dl/dgx/pytorch:main-py3-devel"
-    IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:24.12-py3-devel"
+    IMAGE_LINK="ghcr.io/nvidia/jax:pax"
     ;;
   "bw-jax")
     IMAGE_LINK="gitlab-master.nvidia.com:5005/dl/dgx/jax:blackwell-jax-upstream"
     ;;
+  "torch")
+    IMAGE_LINK="gitlab-master.nvidia.com:5005/dl/dgx/pytorch:main-py3-devel"
+    ;;
   "bw-torch")
     IMAGE_LINK="gitlab-master.nvidia.com:5005/dl/dgx/pytorch:main-py3-devel"
-#    IMAGE_LINK="gitlab-master.nvidia.com:5005/dl/dgx/pytorch:main-py3-devel@sha256:bf66bbabf0f4ba6c6c032c8e187a8f3403104b8787b6c255d61a9e124658dd1b"
     ;;
   *)
     echo "Invalid IMAGE"

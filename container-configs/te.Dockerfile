@@ -10,8 +10,7 @@ RUN apt-get install gdb python3-dbg -y
 ARG NEW_USER
 ARG NEW_UID
 ARG NEW_GID
-RUN groupadd -g ${NEW_GID} ${NEW_USER}
-RUN useradd -m -g${NEW_GID} ${NEW_USER} -u${NEW_UID} -d/home/${NEW_USER} -s /bin/bash
+RUN useradd ${NEW_USER} -s /bin/bash -u${NEW_UID} -g${NEW_GID} -d/home/${NEW_USER}
 RUN usermod -aG sudo ${NEW_USER}
 RUN echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
@@ -19,7 +18,8 @@ USER ${NEW_USER}
 
 WORKDIR /home/${NEW_USER}
 ENV PATH="~/.local/bin:$PATH"
-ENV LD_LIBRARY_PATH="/home/${NEW_USER}/cudnn/lib64:$LD_LIBRARY_PATH"
+# ENV LD_LIBRARY_PATH="/home/${NEW_USER}/cudnn/lib64:$LD_LIBRARY_PATH"
 ENV NVTE_BUILD_THREADS_PER_JOB=2
 ENV NVTE_BUILD_DEBUG=1
-ENV NVTE_FRAMEWORK=none
+RUN sudo rm /usr/lib/python3.*/EXTERNALLY-MANAGED
+# ENV NVTE_FRAMEWORK=none
