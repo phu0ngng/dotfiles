@@ -45,3 +45,11 @@ vim.opt.updatetime = 50
 vim.opt.tw = 100
 vim.opt.hlsearch = true
 vim.api.nvim_create_autocmd("BufEnter", { pattern = "*.inc,*.hpp,*.cu, *.h", command = [[setlocal filetype=cpp]] })
+
+-- Delete trailing spaces before saving
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*",
+  command = [[%s/\s\+$//e]]
+})
+
+vim.g.python3_host_prog='/usr/bin/python3'

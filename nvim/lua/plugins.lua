@@ -36,13 +36,17 @@ local plugins = {
   {'lewis6991/gitsigns.nvim', tag='v0.6' },
   --- Search for whatever codesnip online in a separated window
   {'RishabhRD/nvim-cheat.sh', name = 'cheat', dependencies = {'RishabhRD/popfix'}},
+  -- Used by other plugins
+  {'nvim-lua/plenary.nvim'},
 
   --- Autocompletion with cmp
-  {'hrsh7th/cmp-cmdline'}, -- cmdline completions
-  {'saadparwaiz1/cmp_luasnip'}, -- snippet completions
   {'hrsh7th/nvim-cmp'}, -- The completion plugin
   {'hrsh7th/cmp-buffer'}, -- buffer completions
   {'hrsh7th/cmp-path'}, -- path completions
+  {'saadparwaiz1/cmp_luasnip'}, -- snippet completions
+  -- {'hrsh7th/cmp-cmdline'}, -- cmdline completions
+  {'hrsh7th/cmp-nvim-lsp'},
+  {'hrsh7th/cmp-nvim-lua'},
 
   --- Snippets
   {'L3MON4D3/LuaSnip'}, --snippet engine
@@ -52,28 +56,28 @@ local plugins = {
   {'ray-x/lsp_signature.nvim'},
 
   --- Autopairs
-  {'windwp/nvim-autopairs'}, --Autopairs, integrates with both cmp and treesitter
+  {'windwp/nvim-autopairs'}, -- autopairs, integrates with both cmp and treesitter
 
   --- Easy comments
   {'numToStr/Comment.nvim'},
   {'JoosepAlviste/nvim-ts-context-commentstring'},
 
   --- Language server configuration
-  {'neovim/nvim-lspconfig'},
-  {'williamboman/mason.nvim'},
+  {'neovim/nvim-lspconfig'}, -- enable LSP
+  {'williamboman/mason.nvim'}, -- lsp installer
   {'williamboman/mason-lspconfig.nvim'},
-  {'nvim-lua/plenary.nvim'},
-  {'jose-elias-alvarez/null-ls.nvim'},
+  {'jose-elias-alvarez/null-ls.nvim'}, -- formatters and linters
+  {"RRethy/vim-illuminate"},
 
   ---- Telescope
   {'nvim-telescope/telescope.nvim'},
-  --{'nvim-lua/popup.nvim'}, --Popup API 
+  --{'nvim-lua/popup.nvim'}, --Popup API
   --{'nvim-telescope/telescope-media-files.nvim'},
 
   -- Indentline
   {'lukas-reineke/indent-blankline.nvim'},
 
-  --- Grammarly 
+  --- Grammarly
   {'rhysd/vim-grammarous',lazy=false, name='grammarous'},
   --- Open files at your last edit position
   {'farmergreg/vim-lastplace'},
@@ -82,9 +86,15 @@ local plugins = {
   {'akinsho/bufferline.nvim'},
 
   --- Cheatsheet for keymaps
-  --[[ {'folke/which-key.nvim'} ]]
+  {'folke/which-key.nvim'},
 
-  -- Auto folds TODO
+  -- Improve startup time
+  {'lewis6991/impatient.nvim'},
+
+  -- LLM servers
+  {"olimorris/codecompanion.nvim", dependencies = {"nvim-lua/plenary.nvim", "nvim-treesitter/nvim-treesitter"},
+    config = true
+  },
 }
 
 local opts = {}
