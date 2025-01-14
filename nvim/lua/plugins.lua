@@ -21,7 +21,7 @@ local plugins = {
   {'lnhrnndz/xresources-nvim'},
   {'kyazdani42/nvim-web-devicons'}, -- For icons
   --- Plugin Manager in separated config files
-  {'wbthomason/packer.nvim'},
+  -- {'wbthomason/packer.nvim'},
   --- Tmux navigator
   { 'christoomey/vim-tmux-navigator',  name = 'tmux-navigator'},
   --- Lualine (bottom bar)
@@ -95,6 +95,9 @@ local plugins = {
   {"olimorris/codecompanion.nvim", dependencies = {"nvim-lua/plenary.nvim", "nvim-treesitter/nvim-treesitter"},
     config = true
   },
+
+  -- Debugger
+  { "rcarriga/nvim-dap-ui", dependencies = {"mfussenegger/nvim-dap", "nvim-neotest/nvim-nio", "jbyuki/one-small-step-for-vimkind", "mfussenegger/nvim-dap-python"} },
 }
 
 local opts = {}

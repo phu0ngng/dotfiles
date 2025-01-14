@@ -17,6 +17,22 @@ return {
     end,
     single_file_support = true,
   },
+  --- pycodestyle and pyflakes are enabled by default, so they need to be disabled
+  settings = {
+    pylsp = {
+      plugins = {
+        pycodestyle = {
+          enabled = true,
+          maxLineLength = 100
+        },
+        pyflakes = { enabled = false },
+        pylint = {
+          enabled = true,
+          args = {'--max-line-length=100'}
+        }
+      }
+    }
+  },
   docs = {
     description = [[
 https://github.com/python-lsp/python-lsp-server
