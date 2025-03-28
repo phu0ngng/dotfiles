@@ -27,9 +27,9 @@ vim.g.ibl_use_treesitter = true
 vim.g.ibl_show_current_context = true
 
 ibl.setup({
-	-- show_end_of_line = true,
-	-- space_char_blankline = " ",
-	-- show_current_context_start = true,
+	show_end_of_line = true,
+	space_char_blankline = " ",
+	show_current_context_start = true,
 })
 
-vim.keymap.set('n', '<C-l>', ':IBLToggle<Enter>')
+-- vim.keymap.set('n', '<C-i>', ':IBLToggle<Enter>')

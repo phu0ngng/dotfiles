@@ -52,4 +52,5 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   command = [[%s/\s\+$//e]]
 })
 
-vim.g.python3_host_prog='/usr/bin/python3'
+vim.g.python3_host_prog='/home/phuonguyen/local/dlcluster-login-03/python/bin/python3'
+vim.env.PATH = vim.env.PATH .. ':' .. '/home/phuonguyen/.local/bin'

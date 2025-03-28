@@ -25,5 +25,5 @@ require("configs.spell")
 require("configs.bufferline")
 --[[ require("configs.whichkey") ]]
 require("configs.impatient")
-require("configs.codecompanion")
-require("configs.dap")
+-- require("configs.codecompanion")
+-- require("configs.dap")

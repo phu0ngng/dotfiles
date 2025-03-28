@@ -92,12 +92,12 @@ local plugins = {
   {'lewis6991/impatient.nvim'},
 
   -- LLM servers
-  {"olimorris/codecompanion.nvim", dependencies = {"nvim-lua/plenary.nvim", "nvim-treesitter/nvim-treesitter"},
-    config = true
-  },
+  -- {"olimorris/codecompanion.nvim", dependencies = {"nvim-lua/plenary.nvim", "nvim-treesitter/nvim-treesitter"},
+  --   config = true
+  -- },
 
   -- Debugger
-  { "rcarriga/nvim-dap-ui", dependencies = {"mfussenegger/nvim-dap", "nvim-neotest/nvim-nio", "jbyuki/one-small-step-for-vimkind", "mfussenegger/nvim-dap-python"} },
+  -- { "rcarriga/nvim-dap-ui", dependencies = {"mfussenegger/nvim-dap", "nvim-neotest/nvim-nio", "jbyuki/one-small-step-for-vimkind", "mfussenegger/nvim-dap-python"} },
 }
 
 local opts = {}
