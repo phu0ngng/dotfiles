@@ -9,6 +9,10 @@
 --- o: Operator-pending.
 --- '': Yes, an empty string. Is the equivalent of n + v + o.
 
+-- Leader key:
+vim.g.mapleader = ','
+vim.g.maplocalleader = ','
+
 -- Navigate vim panes better
 vim.keymap.set('n', '<leader>r', ':set rnu!<CR>')
 vim.keymap.set('n', '<leader>h', ':nohlsearch<CR>')
