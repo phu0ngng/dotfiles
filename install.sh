@@ -57,9 +57,9 @@ then
 	cd ..
 	rm -rf ncurses-6.4*
 	# install tmux
-	wget https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz
-	tar -xvf tmux-3.4.tar.gz
-	cd tmux-3.4/
+	wget https://github.com/tmux/tmux/releases/download/3.5/tmux-3.5.tar.gz
+	tar -xvf tmux-3.5.tar.gz
+	cd tmux-3.5/
 	./configure --prefix=$HOME/$InsDir/tmux  CFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib"
 	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make -j 2
 	make install
@@ -175,9 +175,9 @@ then
 #	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/$InsDir/nvim -j
 #	make install
 
-	wget https://github.com/neovim/neovim/releases/latest/download/nvim-linux64.tar.gz
-	tar -xvf nvim-linux64.tar.gz
-	mv nvim-linux64 nvim
+	wget https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+	tar -xvf nvim-linux-x86_64.tar.gz
+	mv nvim-linux-x86_64 nvim
 
 	export PATH=~/$InsDir/nvim/bin:$PATH
 	export LD_LIBRARY_PATH=~/$InsDir/nvim/lib:$LD_LIBRARY_PATH
