@@ -71,8 +71,8 @@ local plugins = {
 
   ---- Telescope
   {'nvim-telescope/telescope.nvim'},
-  --{'nvim-lua/popup.nvim'}, --Popup API
-  --{'nvim-telescope/telescope-media-files.nvim'},
+  {'nvim-lua/popup.nvim'}, --Popup API
+  {'nvim-telescope/telescope-media-files.nvim'},
 
   -- Indentline
   {'lukas-reineke/indent-blankline.nvim'},

@@ -16,7 +16,26 @@ vim.keymap.set('n', '<Space>h', builtin.help_tags, {})
 
 telescope.setup {
   defaults = {
-
+    layout_strategy = "horizontal", -- makes preview a column to the right
+    layout_config = {
+      horizontal = {
+        preview_width = 0.55,        -- sets preview to 55% of window width
+        prompt_position = "top",     -- prompt at top
+      },
+      width = 0.87,                  -- window is 87% of screen width
+      height = 0.80,                 -- window is 80% of screen height
+      preview_cutoff = 120,          -- show preview column when window is at least 120 columns wide
+    },
+    vimgrep_arguments = {
+      'rg',
+      '--color=never',
+      '--no-heading',
+      '--with-filename',
+      '--line-number',
+      '--column',
+      '--smart-case',
+      -- '--hidden', -- uncomment if you want to include hidden files
+    },
     prompt_prefix = " ",
     selection_caret = " ",
     path_display = { "smart" },
