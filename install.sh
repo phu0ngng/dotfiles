@@ -195,8 +195,11 @@ mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
 echo "vim.g.python3_host_prog='$(which python3)'" >> ~/.config/nvim/lua/options.lua
 #
-pip3 install neovim flake8 black prettier
+python3 -m venv ~/.local/venv/nvim
+source ~/.local/venv/nvim
+pip3 install neovim flake8 black prettier ripgrep
 pip3 install "python-lsp-server[all]" -U setuptools cpplint
+
 echo "Done\n"
 cd ~
 

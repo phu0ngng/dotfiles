@@ -61,3 +61,6 @@ export TMUX_TMPDIR=~/.cache_$host/tmux
 mkdir -p $TMUX_TMPDIR
 export EDITOR='nvim'
 export VISUAL='nvim'
+
+# Python venv
+if [[ -z "$VIRTUAL_ENV" ]]; then source ~/.local/venv/nvim/bin/activate; fi
