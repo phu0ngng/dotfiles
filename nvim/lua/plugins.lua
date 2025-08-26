@@ -66,7 +66,8 @@ local plugins = {
   {'neovim/nvim-lspconfig'}, -- enable LSP
   {'williamboman/mason.nvim'}, -- lsp installer
   {'williamboman/mason-lspconfig.nvim'},
-  {'jose-elias-alvarez/null-ls.nvim'}, -- formatters and linters
+  -- {'jose-elias-alvarez/null-ls.nvim'}, -- formatters and linters
+  {"nvimtools/none-ls.nvim"},
   {"RRethy/vim-illuminate"},
 
   ---- Telescope
@@ -86,7 +87,7 @@ local plugins = {
   {'akinsho/bufferline.nvim'},
 
   --- Cheatsheet for keymaps
-  {'folke/which-key.nvim'},
+  -- {'folke/which-key.nvim'},
 
   -- Improve startup time
   {'lewis6991/impatient.nvim'},
