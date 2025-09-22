@@ -1,18 +1,18 @@
 #/bin/bash
 
-if [ -z "${TE}" ]; then 
+if [ -z "${TE}" ]; then
   TE="${IMAGE}"
 fi
 
 case "$IMAGE" in
   "jax")
-    IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax-2025-03-13"
+    IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax"
     ;;
   "torch")
     IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel"
     ;;
   "bw-jax")
-    IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax-2025-03-27"
+    IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax"
     ;;
   "bw-torch")
     IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel"
