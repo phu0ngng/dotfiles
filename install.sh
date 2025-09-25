@@ -109,19 +109,6 @@ then
    rm get-pip.py
 fi
 
-# Install pip3
-if ! command -v pip3 &> /dev/null
-then
-	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3) get-pip.py --user
-	export PATH=~/.$InsDir/bin:$PATH
-	export LD_LIBRARY_PATH=~/.$InsDir/lib:$LD_LIBRARY_PATH
-	echo "# Pip3 paths
-	export PATH=~/.$InsDir/bin:\$PATH
-	export LD_LIBRARY_PATH=~/.$InsDir/lib:\$LD_LIBRARY_PATH
-	" >> ~/$EnvFile
-  rm get-pip.py
-fi
-
 # Install Ninja
 if ! command -v ninja &> /dev/null
 then
@@ -190,13 +177,31 @@ then
 	echo "... Done"
 fi
 
+source ~/.bashrc
+
 # Install nvim plugin
 mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
 echo "vim.g.python3_host_prog='$(which python3)'" >> ~/.config/nvim/lua/options.lua
 #
+mkdir -p ~/.local/venv
 python3 -m venv ~/.local/venv/nvim
-source ~/.local/venv/nvim
+source ~/.local/venv/nvim/bin/activate
+
+# Install pip3
+if ! command -v pip3 &> /dev/null
+then
+	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3) get-pip.py --user
+	export PATH=~/.$InsDir/bin:$PATH
+	export LD_LIBRARY_PATH=~/.$InsDir/lib:$LD_LIBRARY_PATH
+	echo "# Pip3 paths
+	export PATH=~/.$InsDir/bin:\$PATH
+	export LD_LIBRARY_PATH=~/.$InsDir/lib:\$LD_LIBRARY_PATH
+	" >> ~/$EnvFile
+  rm get-pip.py
+fi
+
+# Other packages for nvim
 pip3 install neovim flake8 black prettier ripgrep
 pip3 install "python-lsp-server[all]" -U setuptools cpplint
 
