@@ -82,9 +82,9 @@ if ! command -v python3 &> /dev/null \
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget https://www.python.org/ftp/python/3.12.3/Python-3.12.3.tar.xz
-	tar -xvf Python-3.12.3.tar.xz
-	cd Python-3.12.3/
+	wget https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
+	tar -xvf Python-3.14.0.tar.xz
+	cd Python-3.14.0/
 	mkdir -p ../python
 	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
 	make -j
