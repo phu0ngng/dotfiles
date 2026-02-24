@@ -62,5 +62,8 @@ mkdir -p $TMUX_TMPDIR
 export EDITOR='nvim'
 export VISUAL='nvim'
 
+# Clean old images
+alias docker-clean="docker rmi -f $(docker images -aq)"
+
 # Python venv
 if [[ -z "$VIRTUAL_ENV" ]]; then source ~/.local/venv/nvim/bin/activate; fi
