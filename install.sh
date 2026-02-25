@@ -112,7 +112,7 @@ then
 	tar -xf Python-3.13.8.tar.xz
 	cd Python-3.13.8/
 	mkdir -p ../python
-	./configure --prefix=$(pwd)/../python --enable-optimizations
+	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
 	make -j
 	make install
 	cd ..
