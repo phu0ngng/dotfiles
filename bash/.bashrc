@@ -40,6 +40,12 @@ fi
 host=$(cat ~/.dotfiles_host 2>/dev/null)
 [ -n "$host" ] && [ -f ~/.env_$host ] && . ~/.env_$host
 
+# Python aliases
+if command -v python3.13 &> /dev/null; then
+  alias python=python3.13
+  alias python3=python3.13
+fi
+
 
 # Open function
 function open() {
