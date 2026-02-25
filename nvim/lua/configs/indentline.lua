@@ -32,4 +32,4 @@ ibl.setup({
 	show_current_context_start = true,
 })
 
--- vim.keymap.set('n', '<C-i>', ':IBLToggle<Enter>')
+vim.keymap.set('n', '<C-i>', ':IBLToggle<Enter>')
