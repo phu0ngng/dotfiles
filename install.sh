@@ -12,19 +12,15 @@ mkdir -p $InsDir
 EnvFile=".env_$host"
 touch ~/$EnvFile
 
-# Install cmake
+# Install cmake (pre-built binary)
 if ! command -v cmake &> /dev/null
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget https://github.com/Kitware/CMake/releases/download/v3.26.1/cmake-3.26.1.tar.gz
-	tar -xvf cmake-3.26.1.tar.gz
-	cd cmake-3.26.1/
-	./bootstrap
-	./configure --prefix=$HOME/$InsDir/cmake
-	make -j
-	make install
-	rm cmake-3.26.1.*
+	wget https://github.com/Kitware/CMake/releases/download/v4.2.3/cmake-4.2.3-linux-x86_64.tar.gz
+	tar -xzf cmake-4.2.3-linux-x86_64.tar.gz
+	mv cmake-4.2.3-linux-x86_64 cmake
+	rm cmake-4.2.3-linux-x86_64.tar.gz
 
 	export PATH=~/$InsDir/cmake/bin:$PATH
 	echo "# Cmake paths
@@ -32,39 +28,63 @@ then
 	" >> ~/$EnvFile
 fi
 
-# Install  tmux
+# Install tmux
 if ! command -v tmux &> /dev/null \
-    || test $(tmux -V | grep -oE '[0-9]+\.[0-9]+' | head -1 | awk -F. '$1 < 3 || $1 == 3 && $2 < 4');
+    || test $(tmux -V | grep -oE '[0-9]+\.[0-9]+' | head -1 | awk -F. '$1 < 3 || $1 == 3 && $2 < 6');
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	# installing libevent
-	wget  https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
-	tar -xvf libevent-2.1.12-stable.tar.gz
-	cd libevent-2.1.12-stable/
-	./configure --prefix=$HOME/$InsDir/libevent --disable-shared --disable-openssl
-	make -j
-	make install
-	cd ..
-	rm -rf libevent-2.1.12-stable*
-	# install ncurses
-	wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
-	tar -xvf ncurses-6.4.tar.gz
-	cd ncurses-6.4/
-	./configure --prefix=$HOME/$InsDir/ncurses
-	make -j
-	make install
-	cd ..
-	rm -rf ncurses-6.4*
+
+	# Install libevent if not present or version < 2.1.12
+	LIBEVENT_INC=$HOME/$InsDir/libevent/include
+	LIBEVENT_LIB=$HOME/$InsDir/libevent/lib
+	if pkg-config --exists libevent 2>/dev/null && \
+	   awk -v v="$(pkg-config --modversion libevent)" \
+	       'BEGIN{split(v,a,"."); exit !(a[1]>2||(a[1]==2&&a[2]>1)||(a[1]==2&&a[2]==1&&a[3]+0>=12))}'; then
+		LIBEVENT_INC=$(pkg-config --variable=includedir libevent)
+		LIBEVENT_LIB=$(pkg-config --variable=libdir libevent)
+	else
+		wget https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+		tar -xzf libevent-2.1.12-stable.tar.gz
+		cd libevent-2.1.12-stable/
+		./configure --prefix=$HOME/$InsDir/libevent --disable-shared --disable-openssl
+		make -j
+		make install
+		cd ..
+		rm -rf libevent-2.1.12-stable*
+	fi
+
+	# Install ncurses if not present or version < 6.6
+	NCURSES_INC=$HOME/$InsDir/ncurses/include
+	NCURSES_LIB=$HOME/$InsDir/ncurses/lib
+	if pkg-config --exists ncurses 2>/dev/null && \
+	   awk -v v="$(pkg-config --modversion ncurses)" \
+	       'BEGIN{split(v,a,"."); exit !(a[1]>6||(a[1]==6&&a[2]+0>=6))}'; then
+		NCURSES_INC=$(pkg-config --variable=includedir ncurses)
+		NCURSES_LIB=$(pkg-config --variable=libdir ncurses)
+	else
+		wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.6.tar.gz
+		tar -xzf ncurses-6.6.tar.gz
+		cd ncurses-6.6/
+		./configure --prefix=$HOME/$InsDir/ncurses
+		make -j
+		make install
+		cd ..
+		rm -rf ncurses-6.6*
+	fi
+
 	# install tmux
-	wget https://github.com/tmux/tmux/releases/download/3.5/tmux-3.5.tar.gz
-	tar -xvf tmux-3.5.tar.gz
-	cd tmux-3.5/
-	./configure --prefix=$HOME/$InsDir/tmux  CFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib"
-	CPPFLAGS="-I$HOME/$InsDir/libevent/include -I$HOME/$InsDir/ncurses/include -I$HOME/$InsDir/ncurses/include/ncurses" LDFLAGS="-static -L$HOME/$InsDir/libevent/lib -L$HOME/$InsDir/ncurses/lib" make -j 2
+	wget https://github.com/tmux/tmux/releases/download/3.6a/tmux-3.6a.tar.gz
+	tar -xzf tmux-3.6a.tar.gz
+	cd tmux-3.6a/
+	./configure --prefix=$HOME/$InsDir/tmux \
+		CFLAGS="-I$LIBEVENT_INC -I$NCURSES_INC -I$NCURSES_INC/ncurses" \
+		LDFLAGS="-L$LIBEVENT_LIB -L$NCURSES_LIB"
+	CPPFLAGS="-I$LIBEVENT_INC -I$NCURSES_INC -I$NCURSES_INC/ncurses" \
+		LDFLAGS="-static -L$LIBEVENT_LIB -L$NCURSES_LIB" make -j
 	make install
 	cd ..
-	rm -rf tmux-3.4 tmux-3.4.tar.gz
+	rm -rf tmux-3.6a*
 	export PATH=~/$InsDir/tmux/bin:$PATH
 	export CPATH=~/$InsDir/tmux/include:$CPATH
 	export LD_LIBRARY_PATH=~/$InsDir/tmux/lib:$LD_LIBRARY_PATH
@@ -75,79 +95,44 @@ then
 	" >> ~/$EnvFile
 fi
 
-
 # Install python3
 if ! command -v python3 &> /dev/null \
-       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 10 ;
+       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 13 ;
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
-	tar -xvf Python-3.14.0.tar.xz
-	cd Python-3.14.0/
+	wget https://www.python.org/ftp/python/3.13.2/Python-3.13.2.tar.xz
+	tar -xf Python-3.13.2.tar.xz
+	cd Python-3.13.2/
 	mkdir -p ../python
 	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
 	make -j
 	make install
 	cd ..
+	rm -rf Python-3.13.2*
 	export PATH=~/$InsDir/python/bin:$PATH
 	export LD_LIBRARY_PATH=~/$InsDir/python/lib:$LD_LIBRARY_PATH
 	echo "# Python paths
 	export PATH=~/$InsDir/python/bin:\$PATH
-	#export CPATH=~/$InsDir/python/include:\$CPATH
 	export LD_LIBRARY_PATH=~/$InsDir/python/lib:\$LD_LIBRARY_PATH
 	" >> ~/$EnvFile
-	rm -rf Python-3.12.3*
-    # Install pip3
-	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3.12) get-pip.py --user
-	export PATH=~/.local/bin:$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH
-	echo "# Pip packages
-	export PATH=~/.local/bin:\$PATH
-	export LD_LIBRARY_PATH=~/.local/lib:\$LD_LIBRARY_PATH
-	 " >> ~/$EnvFile
-   rm get-pip.py
 fi
 
-# Install Ninja
+# Install Ninja (pre-built binary)
 if ! command -v ninja &> /dev/null
 then
 	echo "Ninja could not be found"
 	echo "Installing Ninja ..."
-	mkdir -p ~/$InsDir
-	cd ~/$InsDir
-	git clone https://github.com/ninja-build/ninja.git
-	cd ninja/
-	git checkout release
-	mkdir -p build
-	cd build/
-	cmake ..
-	make -j
-	export PATH=~/$InsDir/ninja/build:$PATH
+	mkdir -p ~/$InsDir/ninja/bin
+	cd ~/$InsDir/ninja/bin
+	wget https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-linux.zip
+	unzip ninja-linux.zip
+	rm ninja-linux.zip
+	export PATH=~/$InsDir/ninja/bin:$PATH
 	echo "# Ninja path
-	export PATH=~/$InsDir/ninja/build:\$PATH
+	export PATH=~/$InsDir/ninja/bin:\$PATH
 	" >> ~/$EnvFile
 fi
-
-# Install LLVM Clang
-#if ! command -v clang &> /dev/null
-#then
-#	echo "Clang could not be found"
-#	echo "Installing Clang ..."
-#	cd ~/$InsDir
-#	git clone https://github.com/llvm/llvm-project.git
-#	cd llvm-project
-#	git checkout release
-#	cmake -S llvm -B build -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel -DLLVM_ENABLE_PROJECTS="clang"
-#	cd  build &&  ninja
-#	export PATH=~/$InsDir/llvm-project/build/bin:$PATH
-#	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:$LD_LIBRARY_PATH
-#	echo "# Clang-Format
-#	export PATH=~/$InsDir/llvm-project/build/bin:\$PATH
-#	export LD_LIBRARY_PATH=~/$InsDir/llvm-project/build/lib:\$LD_LIBRARY_PATH
-#	" >> ~/$EnvFile
-#fi
-
 
 # Install nvim
 if ! command -v nvim &> /dev/null
@@ -156,55 +141,35 @@ then
 	echo "Installing Nvim ..."
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-#	git clone https://github.com/neovim/neovim.git
-#	cd neovim
-#	git checkout release-0.8
-#	make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=~/$InsDir/nvim -j
-#	make install
-
 	wget https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-	tar -xvf nvim-linux-x86_64.tar.gz
+	tar -xzf nvim-linux-x86_64.tar.gz
 	mv nvim-linux-x86_64 nvim
+	rm nvim-linux-x86_64.tar.gz
 
 	export PATH=~/$InsDir/nvim/bin:$PATH
 	export LD_LIBRARY_PATH=~/$InsDir/nvim/lib:$LD_LIBRARY_PATH
 	echo "# NVIM paths
 	export PATH=~/$InsDir/nvim/bin:\$PATH
-	#export CPATH=~/$InsDir/nvim/include:\$CPATH
 	export LD_LIBRARY_PATH=~/$InsDir/nvim/lib:\$LD_LIBRARY_PATH
 	" >> ~/$EnvFile
-
 	echo "... Done"
 fi
 
 source ~/.bashrc
 
-# Install nvim plugin
+# Install nvim config
 mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
 echo "vim.g.python3_host_prog='$(which python3)'" >> ~/.config/nvim/lua/options.lua
-#
+
+# Set up nvim python venv
 mkdir -p ~/.local/venv
 python3 -m venv ~/.local/venv/nvim
 source ~/.local/venv/nvim/bin/activate
-
-# Install pip3
-if ! command -v pip3 &> /dev/null
-then
-	wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py && $(which python3) get-pip.py --user
-	export PATH=~/.$InsDir/bin:$PATH
-	export LD_LIBRARY_PATH=~/.$InsDir/lib:$LD_LIBRARY_PATH
-	echo "# Pip3 paths
-	export PATH=~/.$InsDir/bin:\$PATH
-	export LD_LIBRARY_PATH=~/.$InsDir/lib:\$LD_LIBRARY_PATH
-	" >> ~/$EnvFile
-  rm get-pip.py
-fi
 
 # Other packages for nvim
 pip3 install neovim flake8 black prettier ripgrep
 pip3 install "python-lsp-server[all]" -U setuptools cpplint
 
-echo "Done\n"
+echo "Done"
 cd ~
-
