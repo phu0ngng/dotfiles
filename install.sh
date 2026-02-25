@@ -5,7 +5,7 @@ DotFilesDir=$(pwd)
 cp $DotFilesDir/bash/.bashrc ~
 cp $DotFilesDir/tmux/.tmux.conf ~
 
-host=$(hostname  | cut -d - -f 1 | cut -d . -f 1)
+host=$(hostname | tr '.-' '//' | cut -d'/' -f1)
 InsDir="local/$host"
 mkdir -p $InsDir
 
@@ -17,7 +17,7 @@ if ! command -v cmake &> /dev/null
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget https://github.com/Kitware/CMake/releases/download/v4.2.3/cmake-4.2.3-linux-x86_64.tar.gz
+	wget -nc https://github.com/Kitware/CMake/releases/download/v4.2.3/cmake-4.2.3-linux-x86_64.tar.gz
 	tar -xzf cmake-4.2.3-linux-x86_64.tar.gz
 	mv cmake-4.2.3-linux-x86_64 cmake
 	rm cmake-4.2.3-linux-x86_64.tar.gz
@@ -44,7 +44,7 @@ then
 		LIBEVENT_INC=$(pkg-config --variable=includedir libevent)
 		LIBEVENT_LIB=$(pkg-config --variable=libdir libevent)
 	else
-		wget https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+		wget -nc https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
 		tar -xzf libevent-2.1.12-stable.tar.gz
 		cd libevent-2.1.12-stable/
 		./configure --prefix=$HOME/$InsDir/libevent --disable-shared --disable-openssl
@@ -63,7 +63,7 @@ then
 		NCURSES_INC=$(pkg-config --variable=includedir ncurses)
 		NCURSES_LIB=$(pkg-config --variable=libdir ncurses)
 	else
-		wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.6.tar.gz
+		wget -nc https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.6.tar.gz
 		tar -xzf ncurses-6.6.tar.gz
 		cd ncurses-6.6/
 		./configure --prefix=$HOME/$InsDir/ncurses
@@ -74,7 +74,7 @@ then
 	fi
 
 	# install tmux
-	wget https://github.com/tmux/tmux/releases/download/3.6a/tmux-3.6a.tar.gz
+	wget -nc https://github.com/tmux/tmux/releases/download/3.6a/tmux-3.6a.tar.gz
 	tar -xzf tmux-3.6a.tar.gz
 	cd tmux-3.6a/
 	./configure --prefix=$HOME/$InsDir/tmux \
@@ -96,12 +96,12 @@ then
 fi
 
 # Install python3
-if ! command -v python3 &> /dev/null \
-       	|| test $(python3 --version 2>&1 | cut -d . -f 2) -lt 13 ;
+PY3_VER=$(python3 --version 2>&1 | grep -oP '(?<=Python 3\.)\d+' || echo "0")
+if ! command -v python3 &> /dev/null || test "$PY3_VER" -lt 13 ;
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget https://www.python.org/ftp/python/3.13.2/Python-3.13.2.tar.xz
+	wget -nc https://www.python.org/ftp/python/3.13.2/Python-3.13.2.tar.xz
 	tar -xf Python-3.13.2.tar.xz
 	cd Python-3.13.2/
 	mkdir -p ../python
@@ -125,7 +125,7 @@ then
 	echo "Installing Ninja ..."
 	mkdir -p ~/$InsDir/ninja/bin
 	cd ~/$InsDir/ninja/bin
-	wget https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-linux.zip
+	wget -nc https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-linux.zip
 	unzip ninja-linux.zip
 	rm ninja-linux.zip
 	export PATH=~/$InsDir/ninja/bin:$PATH
@@ -141,7 +141,7 @@ then
 	echo "Installing Nvim ..."
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+	wget -nc https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
 	tar -xzf nvim-linux-x86_64.tar.gz
 	mv nvim-linux-x86_64 nvim
 	rm nvim-linux-x86_64.tar.gz
