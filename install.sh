@@ -105,7 +105,7 @@ then
 	tar -xf Python-3.13.2.tar.xz
 	cd Python-3.13.2/
 	mkdir -p ../python
-	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
+	./configure --prefix=$(pwd)/../python --enable-optimizations
 	make -j
 	make install
 	cd ..
@@ -160,7 +160,6 @@ source ~/.bashrc
 # Install nvim config
 mkdir -p ~/.config/nvim
 cp -r $DotFilesDir/nvim/* ~/.config/nvim/
-echo "vim.g.python3_host_prog='$(which python3)'" >> ~/.config/nvim/lua/options.lua
 
 # Set up nvim python venv
 mkdir -p ~/.local/venv
