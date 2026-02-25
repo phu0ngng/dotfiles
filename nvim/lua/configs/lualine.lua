@@ -3,6 +3,7 @@ if not status_ok then
 	return
 end
 
+local colorhue = os.getenv("TERMCOLORHUE")
 local llt='auto'
 
 local hide_in_width = function()

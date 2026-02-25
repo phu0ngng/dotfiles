@@ -1,5 +1,18 @@
+-- Ensure UTF-8 locale so Nerd Font icons render correctly.
+-- Some servers default to POSIX/C locale which is ASCII-only.
+if not os.getenv("LANG") or os.getenv("LANG") == "" or os.getenv("LANG") == "POSIX" or os.getenv("LANG") == "C" then
+  vim.env.LANG = "en_US.UTF-8"
+end
+
 vim.g.mapleader = ','
 vim.g.maplocalleader = ','
+
+-- Suppress tbl_islist deprecation for plugins not yet updated for nvim 0.11
+-- vim.islist is the new name (0.10+); vim.tbl_isarray is an intermediate alias
+local _islist = vim.islist or vim.tbl_isarray
+if _islist then
+  vim.tbl_islist = _islist
+end
 
 --[[ vim.o.netrw_silent=1 ]]
 vim.o.cmdheight=0
@@ -41,6 +54,7 @@ vim.opt.signcolumn = "yes"
 vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
+vim.loader.enable() -- built-in bytecode cache (replaces impatient.nvim)
 
 vim.opt.textwidth = 100
 vim.opt.hlsearch = true
@@ -52,5 +66,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   command = [[%s/\s\+$//e]]
 })
 
-vim.g.python3_host_prog='/home/phuonguyen/local/dlcluster-login-03/python/bin/python3'
+-- Use whichever python3 is on PATH; avoids hardcoding a machine-specific path
+vim.g.python3_host_prog = vim.fn.exepath("python3")
 vim.env.PATH = vim.env.PATH .. ':' .. '/home/phuonguyen/.local/bin'

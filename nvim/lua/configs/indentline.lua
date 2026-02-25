@@ -3,33 +3,22 @@ if not status_ok then
 	return
 end
 
-local status_ok_2, icons = pcall(require, "configs.icons")
-if not status_ok_2 then
-	return
-end
-
-vim.g.ibl_buftype_exclude = { "terminal", "nofile" }
-vim.g.ibl_filetype_exclude = {
-	"help",
-	"startify",
-	"dashboard",
-	"packer",
-	"neogitstatus",
-	"NvimTree",
-	"Trouble",
-  "text",
-}
-vim.g.ibl_char = icons.ui.LineMiddle
-vim.g.ibl_context_char = icons.ui.LineMiddle
-vim.g.ibl_show_trailing_blankline_indent = false
-vim.g.ibl_show_first_indent_level = true
-vim.g.ibl_use_treesitter = true
-vim.g.ibl_show_current_context = true
-
 ibl.setup({
-	show_end_of_line = true,
-	space_char_blankline = " ",
-	show_current_context_start = true,
+	indent = { char = "│" },
+	scope = { enabled = true },
+	exclude = {
+		filetypes = {
+			"help",
+			"startify",
+			"dashboard",
+			"packer",
+			"neogitstatus",
+			"NvimTree",
+			"Trouble",
+			"text",
+		},
+		buftypes = { "terminal", "nofile" },
+	},
 })
 
 vim.keymap.set('n', '<C-i>', ':IBLToggle<Enter>')

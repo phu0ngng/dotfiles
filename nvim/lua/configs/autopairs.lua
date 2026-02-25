@@ -25,9 +25,14 @@ npairs.setup {
   },
 }
 
-local cmp_autopairs = require "nvim-autopairs.completion.cmp"
-local cmp_status_ok, cmp = pcall(require, "cmp")
-if not cmp_status_ok then
-  return
-end
-cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done { map_char = { tex = "" } })
+-- Defer cmp integration until VimEnter so cmp is guaranteed to be fully loaded
+vim.api.nvim_create_autocmd("VimEnter", {
+  once = true,
+  callback = function()
+    local cmp_ok, cmp = pcall(require, "cmp")
+    if not cmp_ok then return end
+    local pairs_ok, cmp_autopairs = pcall(require, "nvim-autopairs.completion.cmp")
+    if not pairs_ok then return end
+    cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+  end,
+})

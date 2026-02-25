@@ -1,5 +1,5 @@
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
@@ -19,7 +19,6 @@ local plugins = {
   {'EdenEast/nightfox.nvim'},
   --- Color changes based on background
   {'lnhrnndz/xresources-nvim'},
-  {'kyazdani42/nvim-web-devicons'}, -- For icons
   --- Plugin Manager in separated config files
   -- {'wbthomason/packer.nvim'},
   --- Tmux navigator
@@ -29,7 +28,8 @@ local plugins = {
   --- Highlighting
   {'nvim-treesitter/nvim-treesitter'},
   --- File explorer
-  {'kyazdani42/nvim-tree.lua'},
+  {'kyazdani42/nvim-web-devicons', lazy = false},
+  {'kyazdani42/nvim-tree.lua', version = 'v1.15.0', dependencies = {'kyazdani42/nvim-web-devicons'}},
   --- Save undo as a tree
   {'mbbill/undotree'},
   --- Git signs / decorations
@@ -66,7 +66,7 @@ local plugins = {
   {'neovim/nvim-lspconfig'}, -- enable LSP
   {'williamboman/mason.nvim'}, -- lsp installer
   {'williamboman/mason-lspconfig.nvim'},
-  {'jose-elias-alvarez/null-ls.nvim'}, -- formatters and linters
+  {'nvimtools/none-ls.nvim'}, -- formatters and linters (community fork of null-ls)
   {"RRethy/vim-illuminate"},
 
   ---- Telescope
@@ -88,8 +88,7 @@ local plugins = {
   --- Cheatsheet for keymaps
   {'folke/which-key.nvim'},
 
-  -- Improve startup time
-  {'lewis6991/impatient.nvim'},
+  -- Startup time (built-in since nvim 0.9, enabled in options.lua)
 
   -- LLM servers
   -- {"olimorris/codecompanion.nvim", dependencies = {"nvim-lua/plenary.nvim", "nvim-treesitter/nvim-treesitter"},

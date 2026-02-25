@@ -1,67 +1,43 @@
--- local status_ok, _ = pcall(require, "nvim-tree")
--- if not status_ok then
---   return
--- end
--- local config_status_ok, nvim_tree_config = pcall(require, "nvim-tree.config")
--- if not config_status_ok then
---   return
--- end
--- local tree_cb = nvim_tree_config.nvim_tree_callback
-
 require("nvim-tree").setup {
   update_focused_file = {
-    enable = true,
-    update_cwd = true,
+    enable      = true,
+    update_root = true,
   },
   renderer = {
-    root_folder_modifier = ":t",
+    root_folder_label = ":t",
     icons = {
-      glyphs = {
-        default = "",
-        symlink = "",
-        folder = {
-          arrow_open = "",
-          arrow_closed = "",
-          default = "",
-          open = "",
-          empty = "",
-          empty_open = "",
-          symlink = "",
-          symlink_open = "",
-        },
-        git = {
-          unstaged = "",
-          staged = "S",
-          unmerged = "",
-          renamed = "➜",
-          untracked = "U",
-          deleted = "",
-          ignored = "◌",
-        },
+      web_devicons = {
+        file   = { enable = true,  color = true },
+        folder = { enable = false, color = true },
       },
+      show = {
+        file         = true,
+        folder       = true,
+        folder_arrow = true,
+        git          = true,
+        modified     = true,
+        diagnostics  = true,
+        bookmarks    = true,
+      },
+      -- glyphs intentionally omitted: nvim-tree's built-in defaults
+      -- contain the correct Nerd Font bytes for all icons.
     },
   },
   diagnostics = {
-    enable = true,
+    enable       = true,
     show_on_dirs = true,
-    icons = {
-      hint = "",
-      info = "",
-      warning = "",
-      error = "",
-    },
   },
   view = {
-    width = 30,
+    width         = 30,
     adaptive_size = true,
-    side = "left",
-    -- mappings = {
-    --    list = {
-    --      { key = { "l", "<CR>", "o" }, cb = tree_cb "edit" },
-    --      { key = "h", cb = tree_cb "close_node" },
-    --      { key = "v", cb = tree_cb "vsplit" },
-    --    },
-    --  },
+    side          = "left",
+  },
+  filters = {
+    dotfiles = true,
+  },
+  sort = {
+    sorter = "case_sensitive",
   },
 }
+
 vim.keymap.set('n', '<C-n>', ':NvimTreeFindFileToggle<CR>')
