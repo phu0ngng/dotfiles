@@ -3,15 +3,7 @@ if not status_ok then
 	return
 end
 
-local colorhue = os.getenv("TERMCOLORHUE")
 local llt='auto'
-if colorhue == "light" then
-    vim.o.background='light'
-    llt='ayu'
-elseif true then
-    vim.o.background='dark'
-    llt='ayu'
-end
 
 local hide_in_width = function()
 	return vim.fn.winwidth(0) > 80
