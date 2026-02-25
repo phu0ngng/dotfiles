@@ -108,15 +108,15 @@ if ! command -v python3 &> /dev/null || test "$PY3_VER" -lt 13 ;
 then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
-	wget -nc https://www.python.org/ftp/python/3.13.2/Python-3.13.2.tar.xz
-	tar -xf Python-3.13.2.tar.xz
-	cd Python-3.13.2/
+	wget -nc https://www.python.org/ftp/python/3.13.8/Python-3.13.8.tar.xz
+	tar -xf Python-3.13.8.tar.xz
+	cd Python-3.13.8/
 	mkdir -p ../python
 	./configure --prefix=$(pwd)/../python --enable-optimizations
 	make -j
 	make install
 	cd ..
-	rm -rf Python-3.13.2*
+	rm -rf Python-3.13.8*
 	export PATH=~/$InsDir/python/bin:$PATH
 	export LD_LIBRARY_PATH=~/$InsDir/python/lib:$LD_LIBRARY_PATH
 	echo "# Python paths
