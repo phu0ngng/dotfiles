@@ -37,8 +37,8 @@ then
 fi
 
 # Env PATH
-host=$(hostname | tr '.-' '//' | cut -d'/' -f1)
-[ -f ~/.env_$host ] && . ~/.env_$host
+host=$(cat ~/.dotfiles_host 2>/dev/null)
+[ -n "$host" ] && [ -f ~/.env_$host ] && . ~/.env_$host
 
 
 # Open function

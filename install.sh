@@ -5,7 +5,14 @@ DotFilesDir=$(pwd)
 cp $DotFilesDir/bash/.bashrc ~
 cp $DotFilesDir/tmux/.tmux.conf ~
 
-host=$(hostname | tr '.-' '//' | cut -d'/' -f1)
+# Host must be passed as argument: ./install.sh <host>
+if [ -z "$1" ]; then
+	echo "Error: No host specified. Usage: ./install.sh <host>"
+	exit 1
+fi
+host="$1"
+
+echo "$host" > ~/.dotfiles_host
 InsDir="local/$host"
 mkdir -p $InsDir
 
