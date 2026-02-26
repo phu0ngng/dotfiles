@@ -113,8 +113,8 @@ then
 	cd Python-3.13.8/
 	mkdir -p ../python
 	./configure --prefix=$(pwd)/../python --enable-optimizations --enable-shared
-	make -j
-	make install
+  make -j 8
+	make altinstall -j 8
 	cd ..
 	rm -rf Python-3.13.8*
 	export PATH=~/$InsDir/python/bin:$PATH
@@ -170,8 +170,8 @@ cp -r $DotFilesDir/nvim/* ~/.config/nvim/
 
 # Set up nvim python venv
 mkdir -p ~/.local/venv
-python3 -m venv ~/.local/venv/nvim
-source ~/.local/venv/nvim/bin/activate
+python3 -m venv ~/.local/venv
+source ~/.local/venv/bin/activate
 
 # Other packages for nvim
 pip3 install neovim flake8 black prettier ripgrep
