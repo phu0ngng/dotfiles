@@ -42,43 +42,43 @@ then
 	mkdir -p ~/$InsDir
 	cd ~/$InsDir
 
-	# Install libevent if not present or version < 2.1.12
-	LIBEVENT_INC=$HOME/$InsDir/libevent/include
-	LIBEVENT_LIB=$HOME/$InsDir/libevent/lib
-	if pkg-config --exists libevent 2>/dev/null && \
-	   awk -v v="$(pkg-config --modversion libevent)" \
-	       'BEGIN{split(v,a,"."); exit !(a[1]>2||(a[1]==2&&a[2]>1)||(a[1]==2&&a[2]==1&&a[3]+0>=12))}'; then
-		LIBEVENT_INC=$(pkg-config --variable=includedir libevent)
-		LIBEVENT_LIB=$(pkg-config --variable=libdir libevent)
-	else
-		wget -nc https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
-		tar -xzf libevent-2.1.12-stable.tar.gz
-		cd libevent-2.1.12-stable/
-		./configure --prefix=$HOME/$InsDir/libevent --disable-shared --disable-openssl
-		make -j
-		make install
-		cd ..
-		rm -rf libevent-2.1.12-stable*
-	fi
-
-	# Install ncurses if not present or version < 6.6
-	NCURSES_INC=$HOME/$InsDir/ncurses/include
-	NCURSES_LIB=$HOME/$InsDir/ncurses/lib
-	if pkg-config --exists ncurses 2>/dev/null && \
-	   awk -v v="$(pkg-config --modversion ncurses)" \
-	       'BEGIN{split(v,a,"."); exit !(a[1]>6||(a[1]==6&&a[2]+0>=6))}'; then
-		NCURSES_INC=$(pkg-config --variable=includedir ncurses)
-		NCURSES_LIB=$(pkg-config --variable=libdir ncurses)
-	else
-		wget -nc https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.6.tar.gz
-		tar -xzf ncurses-6.6.tar.gz
-		cd ncurses-6.6/
-		./configure --prefix=$HOME/$InsDir/ncurses
-		make -j
-		make install
-		cd ..
-		rm -rf ncurses-6.6*
-	fi
+#	# Install libevent if not present or version < 2.1.12
+#	LIBEVENT_INC=$HOME/$InsDir/libevent/include
+#	LIBEVENT_LIB=$HOME/$InsDir/libevent/lib
+#	if pkg-config --exists libevent 2>/dev/null && \
+#	   awk -v v="$(pkg-config --modversion libevent)" \
+#	       'BEGIN{split(v,a,"."); exit !(a[1]>2||(a[1]==2&&a[2]>1)||(a[1]==2&&a[2]==1&&a[3]+0>=12))}'; then
+#		LIBEVENT_INC=$(pkg-config --variable=includedir libevent)
+#		LIBEVENT_LIB=$(pkg-config --variable=libdir libevent)
+#	else
+#		wget -nc https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+#		tar -xzf libevent-2.1.12-stable.tar.gz
+#		cd libevent-2.1.12-stable/
+#		./configure --prefix=$HOME/$InsDir/libevent --disable-shared --disable-openssl
+#		make -j
+#		make install
+#		cd ..
+#		rm -rf libevent-2.1.12-stable*
+#	fi
+#
+#	# Install ncurses if not present or version < 6.6
+#	NCURSES_INC=$HOME/$InsDir/ncurses/include
+#	NCURSES_LIB=$HOME/$InsDir/ncurses/lib
+#	if pkg-config --exists ncurses 2>/dev/null && \
+#	   awk -v v="$(pkg-config --modversion ncurses)" \
+#	       'BEGIN{split(v,a,"."); exit !(a[1]>6||(a[1]==6&&a[2]+0>=6))}'; then
+#		NCURSES_INC=$(pkg-config --variable=includedir ncurses)
+#		NCURSES_LIB=$(pkg-config --variable=libdir ncurses)
+#	else
+#		wget -nc https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.6.tar.gz
+#		tar -xzf ncurses-6.6.tar.gz
+#		cd ncurses-6.6/
+#		./configure --prefix=$HOME/$InsDir/ncurses
+#		make -j
+#		make install
+#		cd ..
+#		rm -rf ncurses-6.6*
+#	fi
 
 	# install tmux
 	wget -nc https://github.com/tmux/tmux/releases/download/3.6a/tmux-3.6a.tar.gz
@@ -176,6 +176,9 @@ source ~/.local/venv/nvim/bin/activate
 # Other packages for nvim
 pip3 install neovim flake8 black prettier ripgrep
 pip3 install "python-lsp-server[all]" -U setuptools cpplint
+
+# Install claude
+curl -fsSL https://claude.ai/install.sh | bash
 
 echo "Done"
 cd ~
