@@ -74,4 +74,4 @@ if command -v docker &> /dev/null; then
 fi
 
 # Python venv
-if [[ -z "$VIRTUAL_ENV" ]]; then source ~/.local/venv/nvim/bin/activate; fi
+if [[ -z "$VIRTUAL_ENV" ]]; then source ~/.local/venv/bin/activate; fi
