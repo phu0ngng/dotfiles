@@ -1,12 +1,16 @@
 #/bin/bash
 
+if [ -z "${IMAGE}" ]; then
+  IMAGE="jax"
+fi
+
 if [ -z "${TE}" ]; then
   TE="${IMAGE}"
 fi
 
 case "$IMAGE" in
   "jax")
-    IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax"
+    IMAGE_LINK="ghcr.io/nvidia/jax:jax"
     ;;
   "torch")
     IMAGE_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel"
@@ -22,8 +26,7 @@ case "$IMAGE" in
     ;;
 esac
 
-ENV_VARS="PATH='~/.local/bin:\$PATH',NVTE_BUILD_THREADS_PER_JOB=4,NVTE_BUILD_DEBUG=1"
-# LD_LIBRARY_PATH='/home/phuonguyen/cudnn/lib64:$LD_LIBRARY_PATH',\
+ENV_VARS="PATH='~/.local/bin:\$PATH',NVTE_BUILD_THREADS_PER_JOB=4"
 
 SAVED_IMAGE=`pwd`/images/${IMAGE}.sqsh
 mkdir -p "`pwd`/images"
@@ -41,8 +44,8 @@ srun -A $ACCOUNT -N 1 -p $PARTITION -t 4:00:00 \
   --container-image=${IMAGE_LINK} \
   --container-name=${IMAGE}-ct \
   --container-save="${SAVED_IMAGE}" \
-  --container-mounts "${WORKSPACE}/te-${TE}":"/home/phuonguyen/te-${TE}" \
-  --container-workdir="/home/phuonguyen/te-${TE}" \
+  --container-mounts "${WORKSPACE}/te":"/home/phuonguyen/te" \
+  --container-workdir="/home/phuonguyen/te" \
   --export=$ENV_VARS \
   --no-container-remap-root \
   --pty bash
