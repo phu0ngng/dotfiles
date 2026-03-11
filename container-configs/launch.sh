@@ -86,7 +86,7 @@ build_srun_args() {
         --container-mounts="$mounts_str"
         --container-workdir="/home/phuonguyen/te"
         --container-writable
-        --export=ALL
+        --export=ALL,NVTE_BUILD_THREADS_PER_JOB=4
         --pty bash -c "$SHARED_INIT"
     )
 }
