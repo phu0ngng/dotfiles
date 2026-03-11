@@ -65,8 +65,8 @@ COMMON_MOUNTS=(
 # ============================================================
 SHARED_INIT='export HOME=/home/phuonguyen && export PATH=/home/phuonguyen/.local/bin:$PATH'
 SHARED_INIT+=' && apt-get update && apt-get install -y bubblewrap socat'
-SHARED_INIT+=' && pip install ninja pybind11 pytest'
-SHARED_INIT+=' && exec bash --rcfile <(echo "export HOME=/home/phuonguyen; export PATH=/home/phuonguyen/.local/bin:\$PATH; alias teinstall=\"pip install --no-build-isolation -e .\"")'
+SHARED_INIT+=' && pip install ninja pybind11 pytesti cmake'
+SHARED_INIT+=' && exec bash --rcfile <(echo "export HOME=/home/phuonguyen; export PATH=/home/phuonguyen/.local/bin:\$PATH; alias teinstall=\"pip install --no-build-isolation -e . -v\"")'
 
 # ============================================================
 # Shared: build SRUN_ARGS from LOCAL_MOUNTS and JOB_NAME
