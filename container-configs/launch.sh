@@ -51,7 +51,6 @@ resolve_image() {
 # Shared: common mounts
 # ============================================================
 COMMON_MOUNTS=(
-    "/home/phuonguyen/te"
     "/home/phuonguyen/.local/share/claude"
     "/home/phuonguyen/.local/bin/claude"
     "/home/phuonguyen/.claude"
@@ -99,6 +98,7 @@ setup_eos() {
     LOCAL_MOUNTS=(
         "/lustre/fsw/${ACCOUNT}/phuong:/scratch"
         "/home/phuonguyen/maxtext"
+    	"/home/phuonguyen/te"
     )
     build_srun_args
 }
@@ -107,8 +107,10 @@ setup_eos() {
 # System: PTYCHE
 # ============================================================
 setup_ptyche() {
-    LOCAL_MOUNTS=()
-    build_srun_args
+	LOCAL_MOUNTS=(
+	"/lustre/fsw/${ACCOUNT}/phuonguyen/te:/home/phuonguyen/te"
+	)
+	build_srun_args
 }
 
 # ============================================================
