@@ -19,6 +19,7 @@ require("configs.bufferline")
 require("configs.whichkey")
 require("configs.impatient")
 
+-- require("configs.minuet")
 -- require("configs.codecompanion")
 -- require("configs.dap")
 --require("configs.nvim-ufo")

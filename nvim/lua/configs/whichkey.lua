@@ -117,6 +117,13 @@ which_key.add({
   { "<leader>sk", "<cmd>Telescope keymaps<cr>",       desc = "Keymaps" },
   { "<leader>sC", "<cmd>Telescope commands<cr>",      desc = "Commands" },
 
+  -- Minuet AI completion
+  { "<leader>m",  group = "Minuet AI" },
+  { "<leader>mc", "<cmd>lua MinuetSwitchProvider('claude')<cr>",      desc = "Use Claude (Anthropic)" },
+  { "<leader>mo", "<cmd>lua MinuetSwitchProvider('openai')<cr>",      desc = "Use OpenAI / Codex" },
+  { "<leader>mq", "<cmd>lua MinuetSwitchProvider('local_qwen')<cr>",  desc = "Use qwen2.5-coder (port 8080)" },
+  { "<leader>mg", "<cmd>lua MinuetSwitchProvider('local_glm')<cr>",   desc = "Use CodeGeeX4/GLM (port 8081)" },
+
   -- Terminal
   { "<leader>t",  group = "Terminal" },
   { "<leader>tn", "<cmd>lua _NODE_TOGGLE()<cr>",                          desc = "Node" },

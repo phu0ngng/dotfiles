@@ -81,11 +81,26 @@ M.on_attach = function(client, bufnr)
 	end
 
 	lsp_keymaps(bufnr)
+
+	-- Signature hints while typing
+	local sig_ok, lsp_signature = pcall(require, "lsp_signature")
+	if sig_ok then
+		lsp_signature.on_attach({
+			bind = true,
+			hint_enable = false,    -- virtual hint text (can be noisy)
+			floating_window = true,
+			handler_opts = { border = "rounded" },
+			toggle_key = "<C-k>",   -- manually trigger signature help
+		}, bufnr)
+	end
+
 	local status_ok, illuminate = pcall(require, "illuminate")
 	if not status_ok then
 		return
 	end
 	illuminate.on_attach(client)
 end
+
+M.setup()  -- initialise diagnostics & LSP handlers
 
 return M

@@ -95,6 +95,8 @@ local plugins = {
   --   config = true
   -- },
 
+  -- AI inline completion
+  { "milanglacier/minuet-ai.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
   -- Debugger
   -- { "rcarriga/nvim-dap-ui", dependencies = {"mfussenegger/nvim-dap", "nvim-neotest/nvim-nio", "jbyuki/one-small-step-for-vimkind", "mfussenegger/nvim-dap-python"} },
 }
