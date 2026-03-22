@@ -170,8 +170,8 @@ ln -s $DotFilesDir/nvim ~/.config/nvim
 
 # Set up nvim python venv
 mkdir -p ~/.local/venv
-python3 -m venv ~/.local/venv
-source ~/.local/venv/bin/activate
+python3 -m venv ~/.local/venv/nvim
+source ~/.local/venv/nvim/bin/activate
 
 # Other packages for nvim
 pip3 install neovim flake8 black prettier ripgrep

@@ -68,4 +68,4 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 -- Use whichever python3 is on PATH; avoids hardcoding a machine-specific path
 vim.g.python3_host_prog = vim.fn.exepath("python3")
-vim.env.PATH = vim.env.PATH .. ':' .. '/home/phuonguyen/.local/bin'
+vim.env.PATH = vim.env.PATH .. ':' .. vim.env.HOME .. '/.local/bin'

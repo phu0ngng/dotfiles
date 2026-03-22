@@ -47,7 +47,6 @@ which_key.setup({
 
 which_key.add({
   -- Top-level
-  { "<leader>a", "<cmd>Alpha<cr>", desc = "Alpha" },
   {
     "<leader>b",
     "<cmd>lua require('telescope.builtin').buffers(require('telescope.themes').get_dropdown{previewer = false})<cr>",
@@ -56,27 +55,24 @@ which_key.add({
   { "<leader>e", "<cmd>NvimTreeToggle<cr>",  desc = "Explorer" },
   { "<leader>w", "<cmd>w!<CR>",              desc = "Save" },
   { "<leader>q", "<cmd>q!<CR>",              desc = "Quit" },
-  { "<leader>c", "<cmd>Bdelete!<CR>",        desc = "Close Buffer" },
+  { "<leader>c", "<cmd>bdelete!<CR>",        desc = "Close Buffer" },
   { "<leader>h", "<cmd>nohlsearch<CR>",      desc = "No Highlight" },
   {
     "<leader>f",
     "<cmd>lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown{previewer = false})<cr>",
     desc = "Find files",
   },
-  { "<leader>F", "<cmd>Telescope live_grep theme=ivy<cr>",                          desc = "Find Text" },
-  { "<leader>P", "<cmd>lua require('telescope').extensions.projects.projects()<cr>", desc = "Projects" },
+  { "<leader>F", "<cmd>Telescope live_grep theme=ivy<cr>", desc = "Find Text" },
 
-  -- Packer
-  { "<leader>p",  group = "Packer" },
-  { "<leader>pc", "<cmd>PackerCompile<cr>", desc = "Compile" },
-  { "<leader>pi", "<cmd>PackerInstall<cr>", desc = "Install" },
-  { "<leader>ps", "<cmd>PackerSync<cr>",    desc = "Sync" },
-  { "<leader>pS", "<cmd>PackerStatus<cr>",  desc = "Status" },
-  { "<leader>pu", "<cmd>PackerUpdate<cr>",  desc = "Update" },
+  -- Lazy
+  { "<leader>p",  group = "Lazy" },
+  { "<leader>pi", "<cmd>Lazy install<cr>", desc = "Install" },
+  { "<leader>ps", "<cmd>Lazy sync<cr>",    desc = "Sync" },
+  { "<leader>pS", "<cmd>Lazy<cr>",         desc = "Status" },
+  { "<leader>pu", "<cmd>Lazy update<cr>",  desc = "Update" },
 
   -- Git
   { "<leader>g",  group = "Git" },
-  { "<leader>gg", "<cmd>lua _LAZYGIT_TOGGLE()<CR>",                       desc = "Lazygit" },
   { "<leader>gj", "<cmd>lua require 'gitsigns'.next_hunk()<cr>",          desc = "Next Hunk" },
   { "<leader>gk", "<cmd>lua require 'gitsigns'.prev_hunk()<cr>",          desc = "Prev Hunk" },
   { "<leader>gl", "<cmd>lua require 'gitsigns'.blame_line()<cr>",         desc = "Blame" },
@@ -126,11 +122,7 @@ which_key.add({
 
   -- Terminal
   { "<leader>t",  group = "Terminal" },
-  { "<leader>tn", "<cmd>lua _NODE_TOGGLE()<cr>",                          desc = "Node" },
-  { "<leader>tu", "<cmd>lua _NCDU_TOGGLE()<cr>",                          desc = "NCDU" },
-  { "<leader>tt", "<cmd>lua _HTOP_TOGGLE()<cr>",                          desc = "Htop" },
-  { "<leader>tp", "<cmd>lua _PYTHON_TOGGLE()<cr>",                        desc = "Python" },
-  { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>",                  desc = "Float" },
-  { "<leader>th", "<cmd>ToggleTerm size=10 direction=horizontal<cr>",     desc = "Horizontal" },
-  { "<leader>tv", "<cmd>ToggleTerm size=80 direction=vertical<cr>",       desc = "Vertical" },
+  { "<leader>tf", "<cmd>terminal<cr>",              desc = "Terminal (full)" },
+  { "<leader>th", "<cmd>split | terminal<cr>",      desc = "Terminal (horizontal)" },
+  { "<leader>tv", "<cmd>vsplit | terminal<cr>",     desc = "Terminal (vertical)" },
 })

@@ -29,11 +29,11 @@ local plugins = {
   {'nvim-treesitter/nvim-treesitter'},
   --- File explorer
   {'kyazdani42/nvim-web-devicons', lazy = false},
-  {'kyazdani42/nvim-tree.lua', version = 'v1.15.0', dependencies = {'kyazdani42/nvim-web-devicons'}},
+  {'kyazdani42/nvim-tree.lua', dependencies = {'kyazdani42/nvim-web-devicons'}},
   --- Save undo as a tree
   {'mbbill/undotree'},
   --- Git signs / decorations
-  {'lewis6991/gitsigns.nvim', tag='v0.6' },
+  {'lewis6991/gitsigns.nvim'},
   --- Search for whatever codesnip online in a separated window
   {'RishabhRD/nvim-cheat.sh', name = 'cheat', dependencies = {'RishabhRD/popfix'}},
   -- Used by other plugins
@@ -49,7 +49,7 @@ local plugins = {
   {'hrsh7th/cmp-nvim-lua'},
 
   --- Snippets
-  {'L3MON4D3/LuaSnip'}, --snippet engine
+  {'L3MON4D3/LuaSnip', build = "make install_jsregexp"}, --snippet engine
   {'rafamadriz/friendly-snippets'}, -- a bunch of snippets to use
 
   --- Function signature
