@@ -2,8 +2,8 @@
 
 DotFilesDir=$(pwd)
 
-cp $DotFilesDir/bash/.bashrc ~
-cp $DotFilesDir/tmux/.tmux.conf ~
+ln -sf $DotFilesDir/bash/.bashrc ~/.bashrc
+ln -sf $DotFilesDir/tmux/.tmux.conf ~/.tmux.conf
 
 # Host must be passed as argument: ./install.sh <host>
 if [ -z "$1" ]; then
@@ -165,8 +165,8 @@ fi
 source ~/.bashrc
 
 # Install nvim config
-mkdir -p ~/.config/nvim
-cp -r $DotFilesDir/nvim/* ~/.config/nvim/
+rm -rf ~/.config/nvim
+ln -s $DotFilesDir/nvim ~/.config/nvim
 
 # Set up nvim python venv
 mkdir -p ~/.local/venv
