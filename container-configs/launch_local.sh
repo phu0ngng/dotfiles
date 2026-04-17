@@ -2,11 +2,12 @@
 # launch_local.sh - Launch a container on an interactive dlc/compute-lab node.
 #
 # Usage:
-#   ./launch_local.sh [image] [--root|--user]
+#   ./launch_local.sh [image] [--root|--user] [--postfix <suffix>]
 #
-# image:  jax (default), maxtext, jaxi, torch
-# --root  run as root inside the container
-# --user  run as $(whoami) with sudo rights (default)
+# image:   jax (default), maxtext, jaxi, jaxn, torch
+# --root   run as root inside the container
+# --user   run as $(whoami) with sudo rights (default)
+# --postfix <suffix>  append <suffix> to the container name (allows multiple instances)
 #
 # Images are cached in scratch. If scratch is not accessible on this node,
 # the image is built/pulled fresh without caching.
@@ -17,25 +18,35 @@ SCRATCH="/home/scratch.phuonguyen_sw"
 IMAGE_CACHE_DIR="${SCRATCH}/container-images"
 
 usage() {
-    echo "Usage: $0 [image] [--root|--user]"
-    echo "  image : jax (default), maxtext, jaxi, torch"
-    echo "  --root: run container as root"
-    echo "  --user: run as $(whoami) with sudo rights (default)"
+    echo "Usage: $0 [image] [--root|--user] [--postfix <suffix>]"
+    echo "  image           : jax (default), maxtext, jaxi, jaxn, torch"
+    echo "  --root          : run container as root"
+    echo "  --user          : run as $(whoami) with sudo rights (default)"
+    echo "  --postfix <sfx> : append <sfx> to container name (e.g. --postfix 2)"
     exit 1
 }
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 IMAGE="jax"
 USER_MODE="nonroot"
+POSTFIX=""
 
-for arg in "$@"; do
+i=1
+while [ $i -le $# ]; do
+    arg="${!i}"
     case "$arg" in
         --root)    USER_MODE="root" ;;
         --user)    USER_MODE="nonroot" ;;
+        --postfix)
+            i=$((i+1))
+            POSTFIX="${!i}"
+            [ -z "$POSTFIX" ] && { echo "--postfix requires an argument"; usage; }
+            ;;
         --help|-h) usage ;;
         --*)       echo "Unknown option: $arg"; usage ;;
         *)         IMAGE="$arg" ;;
     esac
+    i=$((i+1))
 done
 
 # ── Image registry ────────────────────────────────────────────────────────────
@@ -43,12 +54,14 @@ case "$IMAGE" in
     "jax")     IMG_LINK="ghcr.io/nvidia/jax:jax" ;;
     "maxtext") IMG_LINK="ghcr.io/nvidia/jax:maxtext" ;;
     "jaxi")    IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
+    "jaxqa")   IMG_LINK="gitlab-master.nvidia.com/dl/transformerengine/transformerengine:2.14-jax-py3-qa" ;;
+    "jaxn")    IMG_LINK="nvcr.io/nvidia/jax:26.03-py3" ;;
     "torch")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
     *) echo "Unknown image: $IMAGE"; usage ;;
 esac
 
 CONTAINER="te-${IMAGE}"
-CONTAINER_NAME="${CONTAINER}-ct"
+CONTAINER_NAME="${CONTAINER}-ct${POSTFIX:+-${POSTFIX}}"
 
 # ── Scratch availability ──────────────────────────────────────────────────────
 SCRATCH_OK=false
@@ -69,7 +82,8 @@ build_image() {
         -f "${SCRIPT_DIR}/te.Dockerfile" "$SCRIPT_DIR" \
     || { echo "docker build failed"; exit 1; }
     if $SCRATCH_OK; then
-        docker save -o "${IMAGE_CACHE_DIR}/${CONTAINER}.tar" "$CONTAINER"
+        docker save -o "${IMAGE_CACHE_DIR}/${CONTAINER}.tar" "$CONTAINER" \
+            || echo "Warning: docker save failed; image not cached."
     fi
 }
 
@@ -90,7 +104,36 @@ fi
 # ── Mounts ────────────────────────────────────────────────────────────────────
 MOUNTS=()
 
-MOUNTS+=(-v "/home/phuonguyen:/home/phuonguyen")
+HOME_DIR="/home/phuonguyen"
+HOME_MOUNTS=(
+    "${HOME_DIR}/.local/share/claude"
+    "${HOME_DIR}/.claude"
+    "${HOME_DIR}/.claude.json"
+    "${HOME_DIR}/.config"
+    "${HOME_DIR}/.ssh"
+)
+
+# The claude binary lives outside $HOME_DIR so it is always safe to mount.
+# Pick the arch-specific binary based on the host architecture.
+CLAUDE_BASE="/home/tools_ai/anthropic-ai/claude/stable"
+case "$(uname -m)" in
+    aarch64|arm64) CLAUDE_BIN="${CLAUDE_BASE}/linux-aarch64/claude" ;;
+    *)             CLAUDE_BIN="${CLAUDE_BASE}/linux-x86_64/claude" ;;
+esac
+# Mount it at the canonical path so PATH stays the same inside the container.
+CLAUDE_MOUNT_TARGET="${CLAUDE_BASE}/claude"
+[ -e "$CLAUDE_BIN" ] && MOUNTS+=(-v "$CLAUDE_BIN:$CLAUDE_MOUNT_TARGET")
+
+# Probe whether the Docker daemon can traverse $HOME_DIR (rootless Docker may
+# be blocked by its 700 permissions). One probe covers all subdirectory mounts.
+if docker run --rm -v "${HOME_DIR}/.claude:/tmp/_home_probe" --entrypoint true "$CONTAINER" 2>/dev/null; then
+    for mp in "${HOME_MOUNTS[@]}"; do
+        [ -e "$mp" ] && MOUNTS+=(-v "$mp:$mp")
+    done
+else
+    echo "Warning: Docker daemon cannot access ${HOME_DIR} subdirs (rootless/permissions?), skipping home mounts."
+    echo "  Fix: chmod 755 ${HOME_DIR}  or run with a non-rootless Docker daemon."
+fi
 
 # Probe $SCRATCH/te before mounting (may not be accessible on all nodes).
 if $SCRATCH_OK && [ -d "${SCRATCH}/te" ]; then
@@ -112,7 +155,7 @@ fi
 # ── User mode ─────────────────────────────────────────────────────────────────
 USER_ARGS=()
 if [ "$USER_MODE" = "root" ]; then
-    USER_ARGS=(--user root -e HOME=/home/phuonguyen)
+    USER_ARGS=(--user root -w /root -e HOME=/home/phuonguyen)
     echo "Running as: root"
 else
     USER_ARGS=(-e HOME=/home/phuonguyen)
@@ -134,6 +177,6 @@ docker run --gpus all \
     "${USER_ARGS[@]}" \
     --privileged \
     --entrypoint "" \
-    "$CONTAINER" bash \
+    "$CONTAINER" bash -c 'export PATH=/home/tools_ai/anthropic-ai/claude/stable:$PATH; exec bash -i' \
 || { echo "docker failed with exit code $?"; exit 1; }
 )
