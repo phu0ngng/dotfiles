@@ -5,8 +5,8 @@ RUN pip install pybind11 pytest ninja
 RUN apt --fix-broken install -y
 RUN apt-get update -y
 RUN apt-get install sudo -y
-RUN apt-get install gdb python3-dbg cmake -y
-#RUN pip uninstall transformer_engine -y
+RUN apt-get install gdb python3-dbg cmake bubblewrap socat -y
+# RUN pip uninstall transformer_engine -y
 
 ARG NEW_USER
 ARG NEW_UID
