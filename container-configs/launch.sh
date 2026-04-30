@@ -13,8 +13,8 @@
 
 usage() {
     echo "Usage: $0 <system> [image]"
-    echo "  system: eos, ptyche"
-    echo "  images: jax (default), maxtext, torch, int-jax, int-torch"
+    echo "  system: eos, ptyche, prenyx"
+    echo "  images: jax (default), maxtext, torch, int-jax, int-torch, jaxn, torchn"
     exit 1
 }
 
@@ -37,12 +37,20 @@ resolve_image() {
         "maxtext")   IMG_LINK="ghcr.io/nvidia/jax:maxtext-2026-03-05" ;;
         "jax")       IMG_LINK="ghcr.io/nvidia/jax:jax" ;;
         "torch")     IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        "int-jax")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
-        "int-torch") IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch"; exit 1 ;;
+        "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
+        "torchi") IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
+        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.03-py3" ;;
+        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.03-py3" ;;
+        *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn"; exit 1 ;;
     esac
 
-    SAVED_IMAGE="$(pwd)/images/${IMAGE}.sqsh"
+    # CPU arch for per-architecture image caching
+    case "$(uname -m)" in
+        aarch64|arm64) ARCH="arm64" ;;
+        *)             ARCH="x86_64" ;;
+    esac
+
+    SAVED_IMAGE="$(pwd)/images/${IMAGE}-${ARCH}.sqsh"
     mkdir -p "$(pwd)/images"
     [ -f "$SAVED_IMAGE" ] && IMG_LINK="$SAVED_IMAGE"
 }
@@ -75,13 +83,13 @@ build_srun_args() {
     local all_mounts=("${LOCAL_MOUNTS[@]}" "${COMMON_MOUNTS[@]}")
     local mounts_str
     mounts_str=$(IFS=,; echo "${all_mounts[*]}")
-    JOB_NAME="${ACCOUNT}-te:te_${IMAGE}"
+    JOB_NAME="${ACCOUNT}-te:te_${IMAGE}_${ARCH}"
 
     SRUN_ARGS=(
         -A "$ACCOUNT" -N 1 -p "$PARTITION" -t "$TIME"
         -J "$JOB_NAME"
         --container-image="$IMG_LINK"
-        --container-name="${IMAGE}-ct"
+        --container-name="${IMAGE}-${ARCH}-ct"
         --container-save="$SAVED_IMAGE"
         --container-mounts="$mounts_str"
         --container-workdir="/home/phuonguyen/te"
@@ -120,7 +128,7 @@ resolve_image
 
 case "$SYSTEM" in
     eos)    setup_eos ;;
-    ptyche) setup_ptyche ;;
+    ptyche|prenyx) setup_ptyche ;;
     *)
         echo "Error: unknown system '$SYSTEM'"
         usage

@@ -60,11 +60,17 @@ case "$IMAGE" in
     "jaxqa")   IMG_LINK="gitlab-master.nvidia.com/dl/transformerengine/transformerengine:2.14-jax-py3-qa" ;;
     "jaxn")    IMG_LINK="nvcr.io/nvidia/jax:26.03-py3" ;;
     "torch")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-    "torchn")  IMG_LINK="nvcr.io/nvidia/jax:26.03-py3" ;;
+    "torchn")  IMG_LINK="nvcr.io/nvidia/pytorch:26.03-py3" ;;
     *) echo "Unknown image: $IMAGE"; usage ;;
 esac
 
-CONTAINER="te-${IMAGE}"
+# ── CPU arch ──────────────────────────────────────────────────────────────────
+case "$(uname -m)" in
+    aarch64|arm64) ARCH="arm64" ;;
+    *)             ARCH="x86_64" ;;
+esac
+
+CONTAINER="te-${IMAGE}-${ARCH}"
 CONTAINER_NAME="${CONTAINER}-ct${POSTFIX:+-${POSTFIX}}"
 
 # ── Scratch availability ──────────────────────────────────────────────────────
@@ -204,7 +210,8 @@ docker run --gpus all \
     -ti --net=host --ipc=host \
     "${MOUNTS[@]}" \
     "${USER_ARGS[@]}" \
-    --privileged \
+    --cap-add SYS_PTRACE \
+    --security-opt seccomp=unconfined \
     --entrypoint "" \
     "$CONTAINER" bash -c 'export PATH=/home/tools_ai/anthropic-ai/claude/stable:$PATH; exec bash -i' \
 || { echo "docker failed with exit code $?"; exit 1; }
