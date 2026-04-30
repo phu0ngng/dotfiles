@@ -117,6 +117,7 @@ setup_eos() {
 setup_ptyche() {
 	LOCAL_MOUNTS=(
 	"/lustre/fsw/${ACCOUNT}/phuonguyen/te:/home/phuonguyen/te"
+  "/lustre/fsw/${ACCOUNT}/phuonguyen/EP:/home/phuonguyen/EP"
 	)
 	build_srun_args
 }
