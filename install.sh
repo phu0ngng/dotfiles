@@ -5,6 +5,11 @@ DotFilesDir=$(pwd)
 ln -sf $DotFilesDir/bash/.bashrc ~/.bashrc
 ln -sf $DotFilesDir/tmux/.tmux.conf ~/.tmux.conf
 
+# Claude config (settings + project CLAUDE.md)
+mkdir -p ~/.claude
+ln -sf $DotFilesDir/claude/settings.json ~/.claude/settings.json
+ln -sf $DotFilesDir/claude/CLAUDE.md ~/.claude/CLAUDE.md
+
 # Host must be passed as argument: ./install.sh <host>
 if [ -z "$1" ]; then
 	echo "Error: No host specified. Usage: ./install.sh <host>"

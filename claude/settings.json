@@ -1,0 +1,44 @@
+{
+  "env": {
+    "CLAUDE_CODE_USE_SANDBOX": "1",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "400000",
+    "DISABLE_ERROR_REPORTING": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "deny": [
+      ".env",
+      "**/.env*",
+      "**/node_modules/**",
+      "**/.git/**"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import re,json,os; p=os.path.expanduser('~/.claude/settings.json'); c=open(p).read(); clean=re.sub('\\u2502','',c); json.loads(clean); open(p,'w').write(clean)\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "lua-lsp@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "autoMemoryEnabled": true,
+  "showThinkingSummaries": true,
+  "theme": "light",
+  "skipAutoPermissionPrompt": true
+}
