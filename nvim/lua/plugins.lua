@@ -25,8 +25,9 @@ local plugins = {
   { 'christoomey/vim-tmux-navigator',  name = 'tmux-navigator'},
   --- Lualine (bottom bar)
   { 'nvim-lualine/lualine.nvim', dependencies = {'kyazdani42/nvim-web-devicons'}},
-  --- Highlighting
-  {'nvim-treesitter/nvim-treesitter'},
+  --- Highlighting. Pin to `master`; the `main` branch is the v1 rewrite that
+  --- removed `require('nvim-treesitter.configs').setup{...}`.
+  {'nvim-treesitter/nvim-treesitter', branch = 'master'},
   --- File explorer
   {'kyazdani42/nvim-web-devicons', lazy = false},
   {'kyazdani42/nvim-tree.lua', dependencies = {'kyazdani42/nvim-web-devicons'}},
@@ -95,8 +96,6 @@ local plugins = {
   --   config = true
   -- },
 
-  -- AI inline completion
-  { "milanglacier/minuet-ai.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
   -- Debugger
   -- { "rcarriga/nvim-dap-ui", dependencies = {"mfussenegger/nvim-dap", "nvim-neotest/nvim-nio", "jbyuki/one-small-step-for-vimkind", "mfussenegger/nvim-dap-python"} },
 }

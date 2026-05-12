@@ -3,6 +3,7 @@ local servers = {
   "lua_ls",
   "clangd",
   "pylsp",
+  "cmake",
 }
 
 local settings = {

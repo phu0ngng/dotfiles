@@ -1,4 +1,3 @@
-local vim = vim     ■ Undefined global `vim`.
 local opt = vim.opt
 
 opt.foldcolumn = "0"

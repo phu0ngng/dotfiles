@@ -105,22 +105,16 @@ cmp.setup {
         luasnip  = "[Snippet]",
         buffer   = "[Buffer]",
         path     = "[Path]",
-        -- minuet   = "[AI]",
       })[entry.source.name]
       return vim_item
     end,
   },
-  sources = cmp.config.sources(
-    { -- group 1: fast local sources
-      { name = "nvim_lsp" },
-      { name = "luasnip" },
-      { name = "buffer" },
-      { name = "path" },
-    },
-    { -- group 2: AI (shown after group 1, avoids input lag)
-      { name = "minuet" },
-    }
-  ),
+  sources = {
+    { name = "nvim_lsp" },
+    { name = "luasnip" },
+    { name = "buffer" },
+    { name = "path" },
+  },
   confirm_opts = {
     behavior = cmp.ConfirmBehavior.Replace,
     select = false,

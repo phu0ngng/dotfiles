@@ -1,2 +1,0 @@
--- impatient.nvim is obsolete since Neovim 0.9+
--- Built-in bytecode caching is enabled in options.lua via vim.loader.enable()
