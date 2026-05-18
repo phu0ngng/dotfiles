@@ -112,6 +112,11 @@ esac
 CONTAINER="te-${IMAGE}-${ARCH}"
 CONTAINER_NAME="${CONTAINER}-ct${POSTFIX:+-${POSTFIX}}"
 
+# Per-instance Claude config suffix: image name discriminates sessions running
+# different containers; --postfix layers on top for same-image concurrent runs.
+# In-container target paths stay the same; only the host source path varies.
+CLAUDE_SFX="-${IMAGE}${POSTFIX:+-${POSTFIX}}"
+
 # ── Scratch availability ──────────────────────────────────────────────────────
 SCRATCH_OK=false
 if [ -d "$SCRATCH" ] && [ -w "$SCRATCH" ]; then
@@ -195,32 +200,42 @@ HOME_DIR="/home/phuonguyen"
 # they're just under $HOME mounted in-place.
 case "$MACHINE" in
     lyris)
-        CLAUDE_AUTH_MOUNTS=(
-            "${WORKSPACE}/.claude:${HOME_DIR}/.claude"
-            "${WORKSPACE}/.claude.json:${HOME_DIR}/.claude.json"
-        )
-        HOME_MOUNTS=(
-            "${WORKSPACE}/.local/share/claude-${HOST_ARCH}:${HOME_DIR}/.local/share/claude"
-            "${WORKSPACE}/.cache/claude:${HOME_DIR}/.cache/claude"
-            "${WORKSPACE}/.config:${HOME_DIR}/.config"
-            "${HOME_DIR}/.ssh:${HOME_DIR}/.ssh"
-            "${HOME_DIR}/.gitconfig:${HOME_DIR}/.gitconfig"
-        )
         # Seed sources on Lustre so the bind-mounts succeed (mirrors launch.sh).
         mkdir -p "${WORKSPACE}/.claude" "${WORKSPACE}/.config" \
                  "${WORKSPACE}/.cache/claude" \
                  "${WORKSPACE}/.local/share/claude-${HOST_ARCH}"
         [ -s "${WORKSPACE}/.claude.json" ] || echo '{}' > "${WORKSPACE}/.claude.json"
+        # Per-instance copy, seeded from the base so auth carries over.
+        [ -d "${WORKSPACE}/.claude${CLAUDE_SFX}" ] || \
+            { mkdir -p "${WORKSPACE}/.claude${CLAUDE_SFX}"; cp -a "${WORKSPACE}/.claude/." "${WORKSPACE}/.claude${CLAUDE_SFX}/" 2>/dev/null || true; }
+        [ -f "${WORKSPACE}/.claude${CLAUDE_SFX}.json" ] || cp -p "${WORKSPACE}/.claude.json" "${WORKSPACE}/.claude${CLAUDE_SFX}.json"
+        mkdir -p "${WORKSPACE}/.cache/claude${CLAUDE_SFX}"
+        CLAUDE_AUTH_MOUNTS=(
+            "${WORKSPACE}/.claude${CLAUDE_SFX}:${HOME_DIR}/.claude"
+            "${WORKSPACE}/.claude${CLAUDE_SFX}.json:${HOME_DIR}/.claude.json"
+        )
+        HOME_MOUNTS=(
+            "${WORKSPACE}/.local/share/claude-${HOST_ARCH}:${HOME_DIR}/.local/share/claude"
+            "${WORKSPACE}/.cache/claude${CLAUDE_SFX}:${HOME_DIR}/.cache/claude"
+            "${WORKSPACE}/.config:${HOME_DIR}/.config"
+            "${HOME_DIR}/.ssh:${HOME_DIR}/.ssh"
+            "${HOME_DIR}/.gitconfig:${HOME_DIR}/.gitconfig"
+        )
         ;;
     *)
+        # Per-instance copy, seeded from the base so auth carries over.
+        [ -d "${HOME_DIR}/.claude${CLAUDE_SFX}" ] || \
+            { mkdir -p "${HOME_DIR}/.claude${CLAUDE_SFX}"; cp -a "${HOME_DIR}/.claude/." "${HOME_DIR}/.claude${CLAUDE_SFX}/" 2>/dev/null || true; }
+        [ -f "${HOME_DIR}/.claude${CLAUDE_SFX}.json" ] || cp -p "${HOME_DIR}/.claude.json" "${HOME_DIR}/.claude${CLAUDE_SFX}.json" 2>/dev/null || true
+        mkdir -p "${HOME_DIR}/.cache/claude${CLAUDE_SFX}"
         CLAUDE_AUTH_MOUNTS=(
-            "${HOME_DIR}/.claude:${HOME_DIR}/.claude"
-            "${HOME_DIR}/.claude.json:${HOME_DIR}/.claude.json"
+            "${HOME_DIR}/.claude${CLAUDE_SFX}:${HOME_DIR}/.claude"
+            "${HOME_DIR}/.claude${CLAUDE_SFX}.json:${HOME_DIR}/.claude.json"
         )
         HOME_MOUNTS=(
             "${HOME_DIR}/.local/share/claude:${HOME_DIR}/.local/share/claude"
             "${HOME_DIR}/.local/bin/claude:${HOME_DIR}/.local/bin/claude"
-            "${HOME_DIR}/.cache/claude:${HOME_DIR}/.cache/claude"
+            "${HOME_DIR}/.cache/claude${CLAUDE_SFX}:${HOME_DIR}/.cache/claude"
             "${HOME_DIR}/.config:${HOME_DIR}/.config"
             "${HOME_DIR}/.ssh:${HOME_DIR}/.ssh"
             "${HOME_DIR}/.gitconfig:${HOME_DIR}/.gitconfig"
@@ -252,10 +267,12 @@ if [ "$BACKEND" = "docker" ]; then
         done
     elif $SCRATCH_OK; then
         # Docker can't reach HOME_DIR. Stage Claude auth in scratch and sync back.
-        SCRATCH_AUTH_DIR="${SCRATCH}/.claude-auth"
+        SCRATCH_AUTH_DIR="${SCRATCH}/.claude-auth${CLAUDE_SFX}"
         mkdir -p "${SCRATCH_AUTH_DIR}/.claude"
-        rsync -a "${HOME_DIR}/.claude/" "${SCRATCH_AUTH_DIR}/.claude/" 2>/dev/null || true
-        cp -p "${HOME_DIR}/.claude.json" "${SCRATCH_AUTH_DIR}/.claude.json" 2>/dev/null || true
+        rsync -a "${HOME_DIR}/.claude${CLAUDE_SFX}/" "${SCRATCH_AUTH_DIR}/.claude/" 2>/dev/null || \
+            rsync -a "${HOME_DIR}/.claude/" "${SCRATCH_AUTH_DIR}/.claude/" 2>/dev/null || true
+        cp -p "${HOME_DIR}/.claude${CLAUDE_SFX}.json" "${SCRATCH_AUTH_DIR}/.claude.json" 2>/dev/null || \
+            cp -p "${HOME_DIR}/.claude.json" "${SCRATCH_AUTH_DIR}/.claude.json" 2>/dev/null || true
         echo "Note: home dir not accessible to Docker; staging Claude auth in scratch."
         MOUNTS+=("${SCRATCH_AUTH_DIR}/.claude:${HOME_DIR}/.claude")
         MOUNTS+=("${SCRATCH_AUTH_DIR}/.claude.json:${HOME_DIR}/.claude.json")
@@ -330,7 +347,7 @@ fi
 
 # Sync Claude auth back from scratch to home (if we staged it there).
 if [ -n "$SCRATCH_AUTH_DIR" ]; then
-    rsync -a "${SCRATCH_AUTH_DIR}/.claude/" "${HOME_DIR}/.claude/" 2>/dev/null || true
-    cp -p "${SCRATCH_AUTH_DIR}/.claude.json" "${HOME_DIR}/.claude.json" 2>/dev/null || true
+    rsync -a "${SCRATCH_AUTH_DIR}/.claude/" "${HOME_DIR}/.claude${CLAUDE_SFX}/" 2>/dev/null || true
+    cp -p "${SCRATCH_AUTH_DIR}/.claude.json" "${HOME_DIR}/.claude${CLAUDE_SFX}.json" 2>/dev/null || true
 fi
 )

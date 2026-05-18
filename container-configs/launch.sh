@@ -12,16 +12,32 @@
 #   2. Add the system name to the case dispatch at the bottom
 
 usage() {
-    echo "Usage: $0 <system> [image]"
+    echo "Usage: $0 <system> [image] [--postfix <suffix>]"
     echo "  system: eos, ptyche, lyris"
     echo "  images: jax (default), maxtext, torch, int-jax, int-torch, jaxn, torchn"
+    echo "  --postfix <s>: per-instance Claude config + job/container name suffix"
     exit 1
 }
+
+POSTFIX=""
+ARGS=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --postfix) POSTFIX="$2"; shift 2 ;;
+        *)         ARGS+=("$1"); shift ;;
+    esac
+done
+set -- "${ARGS[@]}"
 
 [ $# -lt 1 ] && usage
 
 SYSTEM="$1"
 IMAGE="${2:-jax}"
+# Per-instance Claude config suffix: image name discriminates sessions running
+# different containers (no --postfix needed); --postfix layers on top for
+# multiple concurrent sessions of the same image. Prevents .claude.json lock
+# contention across concurrent claude processes on one node.
+CLAUDE_SFX="-${IMAGE}${POSTFIX:+-${POSTFIX}}"
 
 ACCOUNT="coreai_dlfw_dev"
 TIME="4:00:00"
@@ -86,6 +102,15 @@ mkdir -p "${WORKSPACE}/.claude" "${WORKSPACE}/.config" "${WORKSPACE}/.cache/clau
 # parse error. Seed with `{}` only when missing (don't clobber existing config).
 [ -s "${WORKSPACE}/.claude.json" ] || echo '{}' > "${WORKSPACE}/.claude.json"
 
+# Per-instance Claude config: seed from base on first use so auth carries over,
+# then mount the per-instance copy at the canonical in-container path.
+PF_DIR="${WORKSPACE}/.claude${CLAUDE_SFX}"
+PF_JSON="${WORKSPACE}/.claude${CLAUDE_SFX}.json"
+PF_CACHE="${WORKSPACE}/.cache/claude${CLAUDE_SFX}"
+[ -d "$PF_DIR" ]  || { mkdir -p "$PF_DIR"; cp -a "${WORKSPACE}/.claude/." "$PF_DIR/" 2>/dev/null || true; }
+[ -f "$PF_JSON" ] || cp -p "${WORKSPACE}/.claude.json" "$PF_JSON"
+mkdir -p "$PF_CACHE"
+
 # ============================================================
 # Shared: common mounts (Claude config from $WORKSPACE + binary)
 # Source is on Lustre ($WORKSPACE/.claude*), mounted into $HOME inside the
@@ -93,10 +118,10 @@ mkdir -p "${WORKSPACE}/.claude" "${WORKSPACE}/.config" "${WORKSPACE}/.cache/clau
 # ============================================================
 COMMON_MOUNTS=(
     "${WORKSPACE}/.local/share/claude-${TARGET_ARCH}:/home/phuonguyen/.local/share/claude"
-    "${WORKSPACE}/.claude:/home/phuonguyen/.claude"
-    "${WORKSPACE}/.claude.json:/home/phuonguyen/.claude.json"
+    "${WORKSPACE}/.claude${CLAUDE_SFX}:/home/phuonguyen/.claude"
+    "${WORKSPACE}/.claude${CLAUDE_SFX}.json:/home/phuonguyen/.claude.json"
     "${WORKSPACE}/.config:/home/phuonguyen/.config"
-    "${WORKSPACE}/.cache/claude:/home/phuonguyen/.cache/claude"
+    "${WORKSPACE}/.cache/claude${CLAUDE_SFX}:/home/phuonguyen/.cache/claude"
 )
 # Per-arch claude launcher (the `~/.local/bin/claude` symlink/binary).
 ARCH_CLAUDE_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/claude"
@@ -135,13 +160,13 @@ build_srun_args() {
     local all_mounts=("${LOCAL_MOUNTS[@]}" "${COMMON_MOUNTS[@]}")
     local mounts_str
     mounts_str=$(IFS=,; echo "${all_mounts[*]}")
-    JOB_NAME="${ACCOUNT}-te:te_${IMAGE}_${ARCH}"
+    JOB_NAME="${ACCOUNT}-te:te_${IMAGE}_${ARCH}${CLAUDE_SFX}"
 
     SRUN_ARGS=(
         -A "$ACCOUNT" -N 1 -p "$PARTITION" -t "$TIME"
         -J "$JOB_NAME"
         --container-image="$IMG_LINK"
-        --container-name="${IMAGE}-${ARCH}-ct"
+        --container-name="${IMAGE}-${ARCH}-ct${CLAUDE_SFX}"
         --container-save="$SAVED_IMAGE"
         --container-mounts="$mounts_str"
         --container-workdir="$WORKDIR"
