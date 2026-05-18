@@ -37,7 +37,8 @@ resolve_image() {
         "maxtext")   IMG_LINK="ghcr.io/nvidia/jax:maxtext-2026-03-05" ;;
         "jax")       IMG_LINK="ghcr.io/nvidia/jax:jax" ;;
         "torch")     IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
+        # "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
+        "jaxi")      IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:26.05-jax" ;;
         "torchi") IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
         "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.04-py3" ;;
         "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.04-py3" ;;

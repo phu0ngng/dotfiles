@@ -57,9 +57,11 @@ case "$IMAGE" in
     "jax")     IMG_LINK="ghcr.io/nvidia/jax:jax" ;;
     "maxtext") IMG_LINK="ghcr.io/nvidia/jax:maxtext" ;;
     "jaxi")    IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
+    #"jaxi")      IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:26.05-jax" ;;
+    # "jaxn")    IMG_LINK="nvcr.io/nvidia/jax:26.04-py3" ;;
     "jaxqa")   IMG_LINK="gitlab-master.nvidia.com/dl/transformerengine/transformerengine:2.14-jax-py3-qa" ;;
     "jaxn")    IMG_LINK="nvcr.io/nvidia/jax:26.04-py3" ;;
-    "torch")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
+    "torchi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
     "torchn")  IMG_LINK="nvcr.io/nvidia/pytorch:26.04-py3" ;;
     *) echo "Unknown image: $IMAGE"; usage ;;
 esac
@@ -127,13 +129,16 @@ CLAUDE_AUTH_MOUNTS=(
 )
 HOME_MOUNTS=(
     "${HOME_DIR}/.local/share/claude"
+    "${HOME_DIR}/.local/bin/claude"
+    "${HOME_DIR}/.cache/claude"
     "${HOME_DIR}/.config"
     "${HOME_DIR}/.ssh"
+    "${HOME_DIR}/.gitconfig"
 )
 
 # The claude binary lives outside $HOME_DIR so it is always safe to mount.
 # Pick the arch-specific binary based on the host architecture.
-CLAUDE_BASE="/home/tools_ai/anthropic-ai/claude/stable"
+CLAUDE_BASE="/home/tools_ai/anthropic-ai/claude/latest"
 case "$(uname -m)" in
     aarch64|arm64) CLAUDE_BIN="${CLAUDE_BASE}/linux-aarch64/claude" ;;
     *)             CLAUDE_BIN="${CLAUDE_BASE}/linux-x86_64/claude" ;;
@@ -143,7 +148,7 @@ CLAUDE_MOUNT_TARGET="${CLAUDE_BASE}/claude"
 [ -e "$CLAUDE_BIN" ] && MOUNTS+=(-v "$CLAUDE_BIN:$CLAUDE_MOUNT_TARGET")
 
 # Ensure Claude auth dirs exist on the host.
-mkdir -p "${HOME_DIR}/.claude"
+mkdir -p "${HOME_DIR}/.claude" "${HOME_DIR}/.cache/claude"
 touch -a "${HOME_DIR}/.claude.json"
 
 # Probe whether the Docker daemon can access HOME_DIR subdirs (rootless Docker
@@ -184,16 +189,16 @@ fi
 # Probe $SCRATCH/te before mounting (may not be accessible on all nodes).
 if $SCRATCH_OK; then
     echo "Mounting scratch: ${SCRATCH}"
-    MOUNTS+=(-v "${SCRATCH}:/home/phuonguyen/scratch")
+    MOUNTS+=(-v "${SCRATCH}:${SCRATCH}")
 fi
 
 # ── User mode ─────────────────────────────────────────────────────────────────
 USER_ARGS=()
 if [ "$USER_MODE" = "root" ]; then
-    USER_ARGS=(--user root -w /root -e HOME=/home/phuonguyen)
+    USER_ARGS=(--user root -w "$SCRATCH" -e HOME=/home/phuonguyen)
     echo "Running as: root"
 else
-    USER_ARGS=(-e HOME=/home/phuonguyen)
+    USER_ARGS=(-w "$SCRATCH" -e HOME=/home/phuonguyen)
     echo "Running as: $(whoami) (non-root, sudo enabled)"
 fi
 
@@ -213,7 +218,7 @@ docker run --gpus all \
     --cap-add SYS_PTRACE \
     --security-opt seccomp=unconfined \
     --entrypoint "" \
-    "$CONTAINER" bash -c 'export PATH=/home/tools_ai/anthropic-ai/claude/stable:$PATH; exec bash -i' \
+    "$CONTAINER" bash -c 'export PATH=/home/tools_ai/anthropic-ai/claude/latest:$PATH; exec bash -i' \
 || { echo "docker failed with exit code $?"; exit 1; }
 
 # Sync Claude auth back from scratch to home (if we staged it there).
