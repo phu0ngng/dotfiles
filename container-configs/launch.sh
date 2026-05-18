@@ -13,7 +13,7 @@
 
 usage() {
     echo "Usage: $0 <system> [image]"
-    echo "  system: eos, ptyche, prenyx"
+    echo "  system: eos, ptyche, lyris"
     echo "  images: jax (default), maxtext, torch, int-jax, int-torch, jaxn, torchn"
     exit 1
 }
@@ -24,8 +24,13 @@ SYSTEM="$1"
 IMAGE="${2:-jax}"
 
 ACCOUNT="coreai_dlfw_dev"
-PARTITION="batch"
 TIME="4:00:00"
+
+case "$SYSTEM" in
+    lyris)         PARTITION="gb200" ;;
+    eos|ptyche)    PARTITION="batch" ;;
+    *) echo "Error: unknown system '$SYSTEM'"; usage ;;
+esac
 
 # ============================================================
 # Shared: image registry
@@ -51,66 +56,65 @@ resolve_image() {
         *)             ARCH="x86_64" ;;
     esac
 
-    # Cache .sqsh on Lustre scratch ($SCRATCH) — multi-GB images were
-    # pushing /home over quota. $SCRATCH is set by the per-system block
-    # above before resolve_image() is invoked.
-    SAVED_IMAGE="${SCRATCH}/container-images/${IMAGE}-${ARCH}.sqsh"
-    mkdir -p "${SCRATCH}/container-images"
+    # Cache .sqsh on Lustre ($WORKSPACE) — multi-GB images were
+    # pushing /home over quota.
+    SAVED_IMAGE="${WORKSPACE}/container-images/${IMAGE}-${ARCH}.sqsh"
+    mkdir -p "${WORKSPACE}/container-images"
     [ -f "$SAVED_IMAGE" ] && IMG_LINK="$SAVED_IMAGE"
 }
 
-# ============================================================
-# Shared: Claude binary mount (mirrors launch_local.sh)
-# Mount the arch-specific binary at the canonical path so PATH lookup works
-# the same way the local-docker launcher sets it up.
-# ============================================================
-CLAUDE_BASE="/home/tools_ai/anthropic-ai/claude/stable"
-case "$(uname -m)" in
-    aarch64|arm64) CLAUDE_BIN_HOST="${CLAUDE_BASE}/linux-aarch64/claude" ;;
-    *)             CLAUDE_BIN_HOST="${CLAUDE_BASE}/linux-x86_64/claude" ;;
-esac
-CLAUDE_BIN_MOUNT_TARGET="${CLAUDE_BASE}/claude"
-
-# Per-cluster scratch (Lustre). Used as the container workdir and as the
-# source for Claude config so it persists on Lustre rather than $HOME.
+# Compute-node arch may differ from login-node arch (e.g. lyris gb300 = aarch64).
 case "$SYSTEM" in
-    ptyche|prenyx) SCRATCH="/lustre/fsw/${ACCOUNT}/phuonguyen" ;;
-    eos)           SCRATCH="/lustre/fsw/${ACCOUNT}/phuong" ;;
-    *) echo "Error: unknown system '$SYSTEM'"; usage ;;
+    lyris)      TARGET_ARCH="aarch64" ;;
+    eos|ptyche) TARGET_ARCH="x86_64" ;;
+    *)          TARGET_ARCH="$(uname -m)" ;;
 esac
-WORKDIR="$SCRATCH"
+
+# WORKSPACE must be set in the calling shell env (e.g. via .bashrc per cluster
+# — Lustre paths differ between ptyche/lyris/eos). Used as the container
+# workdir and as the source for Claude config so it persists on Lustre.
+: "${WORKSPACE:?WORKSPACE must be set (per-cluster Lustre dir)}"
+WORKDIR="$WORKSPACE"
 
 # Ensure Claude config sources exist on Lustre so the bind-mounts succeed.
-mkdir -p "${SCRATCH}/.claude" "${SCRATCH}/.config" "${SCRATCH}/.cache/claude" "${SCRATCH}/.local/share/claude"
+# .local/share/claude and .local/bin are kept per-arch so x86 and aarch64
+# installs can coexist on shared Lustre without clobbering each other.
+mkdir -p "${WORKSPACE}/.claude" "${WORKSPACE}/.config" "${WORKSPACE}/.cache/claude" \
+         "${WORKSPACE}/.local/share/claude-${TARGET_ARCH}" \
+         "${WORKSPACE}/.local/bin-${TARGET_ARCH}"
 # .claude.json must be valid JSON; an empty file makes Claude fail with an EOF
 # parse error. Seed with `{}` only when missing (don't clobber existing config).
-[ -s "${SCRATCH}/.claude.json" ] || echo '{}' > "${SCRATCH}/.claude.json"
+[ -s "${WORKSPACE}/.claude.json" ] || echo '{}' > "${WORKSPACE}/.claude.json"
 
 # ============================================================
-# Shared: common mounts (Claude config from $SCRATCH + binary)
-# Source is on Lustre ($SCRATCH/.claude*), mounted into $HOME inside the
+# Shared: common mounts (Claude config from $WORKSPACE + binary)
+# Source is on Lustre ($WORKSPACE/.claude*), mounted into $HOME inside the
 # container so Claude finds it at the standard ~/.claude path.
 # ============================================================
 COMMON_MOUNTS=(
-    "${SCRATCH}/.local/share/claude:/home/phuonguyen/.local/share/claude"
-    "/home/phuonguyen/.local/bin/claude"
-    "${SCRATCH}/.claude:/home/phuonguyen/.claude"
-    "${SCRATCH}/.claude.json:/home/phuonguyen/.claude.json"
-    "${SCRATCH}/.config:/home/phuonguyen/.config"
-    "${SCRATCH}/.cache/claude:/home/phuonguyen/.cache/claude"
-    "/home/phuonguyen/.ssh"
-    "/home/phuonguyen/.gitconfig"
+    "${WORKSPACE}/.local/share/claude-${TARGET_ARCH}:/home/phuonguyen/.local/share/claude"
+    "${WORKSPACE}/.claude:/home/phuonguyen/.claude"
+    "${WORKSPACE}/.claude.json:/home/phuonguyen/.claude.json"
+    "${WORKSPACE}/.config:/home/phuonguyen/.config"
+    "${WORKSPACE}/.cache/claude:/home/phuonguyen/.cache/claude"
 )
-# Add arch-specific Claude binary mount at the canonical path.
-if [ -e "$CLAUDE_BIN_HOST" ]; then
-    COMMON_MOUNTS+=("${CLAUDE_BIN_HOST}:${CLAUDE_BIN_MOUNT_TARGET}")
+# Per-arch claude launcher (the `~/.local/bin/claude` symlink/binary).
+ARCH_CLAUDE_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/claude"
+if [ -e "$ARCH_CLAUDE_BIN" ]; then
+    COMMON_MOUNTS+=("${ARCH_CLAUDE_BIN}:/home/phuonguyen/.local/bin/claude")
+else
+    echo "Warning: ${ARCH_CLAUDE_BIN} missing — run 'bash claude/install_arch.sh --arch ${TARGET_ARCH}' first."
 fi
+# Mount only if present on this host (lyris-style nodes may lack these).
+for mp in "/home/phuonguyen/.ssh" "/home/phuonguyen/.gitconfig"; do
+    [ -e "$mp" ] && COMMON_MOUNTS+=("$mp")
+done
 
 # ============================================================
 # Shared: init command run inside the container on launch
 # ============================================================
 SHARED_INIT='export HOME=/home/phuonguyen'
-SHARED_INIT+=' && export PATH='"${CLAUDE_BASE}"':/home/phuonguyen/.local/bin:$PATH'
+SHARED_INIT+=' && export PATH=/home/phuonguyen/.local/bin:$PATH'
 SHARED_INIT+=' && echo "" && echo "==============================================================" '
 SHARED_INIT+=' && echo " Container ready. JOBID=$SLURM_JOB_ID" '
 # Optional: agent-kickoff helper line (set by launch_agent.sh).
@@ -122,7 +126,7 @@ SHARED_INIT+=' && echo "========================================================
 # Install deps only when bubblewrap is missing (i.e. fresh image, not the cached
 # sqsh which already has them baked in). Saves ~20-30s on subsequent launches.
 SHARED_INIT+=' && { command -v bubblewrap >/dev/null 2>&1 || { apt-get update && apt-get install -y bubblewrap socat && pip install ninja pybind11 pytest cmake; }; }'
-SHARED_INIT+=' && exec bash --rcfile <(echo "export HOME=/home/phuonguyen; export PATH='"${CLAUDE_BASE}"':/home/phuonguyen/.local/bin:\$PATH; alias teinstall=\"pip install --no-build-isolation -e . -v\"")'
+SHARED_INIT+=' && exec bash --rcfile <(echo "export HOME=/home/phuonguyen; export PATH=/home/phuonguyen/.local/bin:\$PATH; alias teinstall=\"pip install --no-build-isolation -e . -v\"")'
 
 # ============================================================
 # Shared: build SRUN_ARGS from LOCAL_MOUNTS and JOB_NAME
@@ -182,7 +186,7 @@ resolve_image
 
 case "$SYSTEM" in
     eos)    setup_eos ;;
-    ptyche|prenyx) setup_ptyche ;;
+    ptyche|lyris) setup_ptyche ;;
     *)
         echo "Error: unknown system '$SYSTEM'"
         usage
