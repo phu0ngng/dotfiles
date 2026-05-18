@@ -36,6 +36,9 @@ then
   alias vim=$(which nvim)
 fi
 
+# User-local binaries
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
+
 # Env PATH
 host=$(cat ~/.dotfiles_host 2>/dev/null)
 [ -n "$host" ] && [ -f ~/.env_$host ] && . ~/.env_$host
@@ -75,3 +78,15 @@ fi
 
 # Python venv
 if [[ -z "$VIRTUAL_ENV" ]]; then source ~/.local/venv/bin/activate; fi
+
+# Workspace
+export WORKSPACE="/lustre/fsw/coreai_dlfw_dev/phuonguyen"
+
+# Per-arch claude binary lives in $WORKSPACE (see claude/install_arch.sh).
+case "$(uname -m)" in
+    aarch64|arm64) _claude_arch=aarch64 ;;
+    *)             _claude_arch=x86_64 ;;
+esac
+[ -d "$WORKSPACE/.local/bin-$_claude_arch" ] && \
+    export PATH="$WORKSPACE/.local/bin-$_claude_arch:$PATH"
+unset _claude_arch

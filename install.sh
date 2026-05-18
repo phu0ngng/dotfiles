@@ -14,17 +14,21 @@ host="$1"
 DotFilesDir=$(cd "$(dirname "$0")" && pwd)
 export DotFilesDir
 
+# Pick up PATH from any prior partial install so component scripts can skip work.
+[ -f ~/".env_$host" ] && source ~/".env_$host"
+
 "$DotFilesDir/install/dotfiles.sh"    "$host"
 "$DotFilesDir/install/cmake.sh"       "$host"
 "$DotFilesDir/install/tmux.sh"        "$host"
 "$DotFilesDir/install/python.sh"      "$host"
 "$DotFilesDir/install/ninja.sh"       "$host"
 "$DotFilesDir/install/nvim.sh"        "$host"
+"$DotFilesDir/install/claude.sh"      "$host"
 
-source ~/.bashrc || true
+# Pick up PATH updates from completed installers before nvim-config needs python3.
+source ~/".env_$host"
 
 "$DotFilesDir/install/nvim-config.sh" "$host"
-"$DotFilesDir/install/claude.sh"
 
 echo "Done"
 cd ~
