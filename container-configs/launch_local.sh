@@ -93,12 +93,9 @@ case "$IMAGE" in
     "jax")     IMG_LINK="ghcr.io/nvidia/jax:jax" ;;
     "maxtext") IMG_LINK="ghcr.io/nvidia/jax:maxtext" ;;
     "jaxi")    IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
-    #"jaxi")      IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:26.05-jax" ;;
-    # "jaxn")    IMG_LINK="nvcr.io/nvidia/jax:26.04-py3" ;;
-    "jaxqa")   IMG_LINK="gitlab-master.nvidia.com/dl/transformerengine/transformerengine:2.14-jax-py3-qa" ;;
-    "jaxn")    IMG_LINK="nvcr.io/nvidia/jax:26.04-py3" ;;
+    "jaxn")    IMG_LINK="nvcr.io/nvidia/jax:26.05-py3" ;;
     "torchi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-    "torchn")  IMG_LINK="nvcr.io/nvidia/pytorch:26.04-py3" ;;
+    "torchn")  IMG_LINK="nvcr.io/nvidia/pytorch:26.05-py3" ;;
     *) echo "Unknown image: $IMAGE"; usage ;;
 esac
 

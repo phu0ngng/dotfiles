@@ -61,8 +61,8 @@ resolve_image() {
         # "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
         "jaxi")      IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:26.05-jax" ;;
         "torchi") IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.04-py3" ;;
-        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.04-py3" ;;
+        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.05-py3" ;;
+        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.05-py3" ;;
         *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn"; exit 1 ;;
     esac
 
