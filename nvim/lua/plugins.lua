@@ -98,6 +98,9 @@ local plugins = {
 
   -- Debugger
   -- { "rcarriga/nvim-dap-ui", dependencies = {"mfussenegger/nvim-dap", "nvim-neotest/nvim-nio", "jbyuki/one-small-step-for-vimkind", "mfussenegger/nvim-dap-python"} },
+
+  --- Code review with diffview + annotation export for Claude CLI
+  { 'sindrets/diffview.nvim', dependencies = {'nvim-lua/plenary.nvim'} },
 }
 
 local opts = {}

@@ -76,13 +76,16 @@ case "$MACHINE" in
         CLAUDE_BASE="/home/tools_ai/anthropic-ai/claude/latest"
         CLAUDE_BIN="${CLAUDE_BASE}/linux-${HOST_ARCH}/claude"
         CLAUDE_MOUNT_TARGET="${CLAUDE_BASE}/claude"
+        CLAUDE_PATH_DIR="${CLAUDE_BASE}"
         ;;
     lyris)
         BACKEND="enroot"
         : "${WORKSPACE:?WORKSPACE must be set for --machine lyris (per-cluster Lustre dir)}"
         SCRATCH="${WORKSPACE}"
         CLAUDE_BIN="${WORKSPACE}/.local/bin-${HOST_ARCH}/claude"
-        CLAUDE_MOUNT_TARGET="/home/phuonguyen/.local/bin/claude"
+        # Mount the directory (not file) so auto-update inode replacement doesn't stale the mount.
+        CLAUDE_MOUNT_TARGET="/home/phuonguyen/.local/bin"
+        CLAUDE_PATH_DIR="/home/phuonguyen/.local/bin"
         ;;
     *) echo "Unknown machine: $MACHINE"; usage ;;
 esac
@@ -240,9 +243,14 @@ case "$MACHINE" in
         ;;
 esac
 
-# Mount the per-arch claude binary at the canonical path (set per-machine above)
-# so PATH stays the same inside the container.
-[ -e "$CLAUDE_BIN" ] && MOUNTS+=("$CLAUDE_BIN:$CLAUDE_MOUNT_TARGET")
+# Mount the per-arch claude binary/dir at the canonical path.
+# lyris: mount the whole bin dir so auto-update inode replacement doesn't stale the mount.
+if [ "$MACHINE" = "lyris" ]; then
+    ARCH_CLAUDE_DIR="${WORKSPACE}/.local/bin-${HOST_ARCH}"
+    [ -d "$ARCH_CLAUDE_DIR" ] && MOUNTS+=("${ARCH_CLAUDE_DIR}:${CLAUDE_MOUNT_TARGET}")
+else
+    [ -e "$CLAUDE_BIN" ] && MOUNTS+=("$CLAUDE_BIN:$CLAUDE_MOUNT_TARGET")
+fi
 
 # Ensure Claude auth dirs exist on the host.
 mkdir -p "${HOME_DIR}/.claude" "${HOME_DIR}/.cache/claude"
@@ -304,7 +312,7 @@ echo "Launching ${CONTAINER_NAME} [backend=${BACKEND}, image=${IMAGE}, user=${US
 # Default workdir = scratch (mounted in-place above) so `pwd` lines up
 # host-vs-container.
 WORKDIR="$SCRATCH"
-INNER_CMD="export PATH=$(dirname "$CLAUDE_MOUNT_TARGET"):\$PATH; cd $WORKDIR; exec bash -i"
+INNER_CMD="export PATH=${CLAUDE_PATH_DIR}:\$PATH; cd $WORKDIR; exec bash -i"
 
 if [ "$BACKEND" = "docker" ]; then
     USER_ARGS=()

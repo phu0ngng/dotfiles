@@ -35,5 +35,58 @@
 - Investigate unfamiliar files/branches before deleting — they may be in-progress work from another agent or session.
 
 # NCCL EP
-- When you need to build NCCL EP, learn how to build via /home/scratch.phuonguyen_sw/EP/ep/scripts/run_nccl_ep_interactive.sh
 - When you write an MR description, follow the format of Summary -> Implementation -> Testing
+- When building NCCL EP, only use the NCCL that is already available in the container. Do not point the build at any other NCCL source tree or install prefix (no `NCCL_HOME` override to an out-of-container path, no `LD_LIBRARY_PATH` prepend of a from-source `nccl/build/lib`). If the container's NCCL is missing a required feature, stop and ask — do not silently switch to an external NCCL.
+- When running `ep_bench` (ep_bench.cu), always give the shuffle kernels all available SMs: leave `--shuffle-sms` at its default (0 = auto = device_sm_count) or set it explicitly to the full device SM count. The local permute kernels (dispatch epilogue / combine prologue) are grid-sized by this and their cost scales inversely with SM count, so anything below all-SMs just slows them down.
+
+## NCCL EP - run 2 LSA teams on one node (HT inter-node count/scan path locally)
+Env recipe, not a code patch - the "logical multi-node" support (`nNodes = rdma_team_size`) is
+already in the tree. Do NOT commit any workaround to the branch. Use the container's NCCL only
+(see the build rule above). The node exports `NCCL_NET_PLUGIN=spcx` (Spectrum-X), which fails
+GDAKI context creation in single-node loopback - override it to native IB GDAKI:
+```
+mpirun -np 4 --allow-run-as-root --oversubscribe --map-by :OVERSUBSCRIBE \
+  -x NCCL_LSA_TEAM_SIZE=2 -x NCCL_MULTI_RANK_GPU_ENABLE=1 -x NCCL_NET_PLUGIN= \
+  build/test/nccl_ep/ep_bench -a ht -L em -V -t 4096 -k 8 -e 32 -d 2048 -i 2 -w 1
+```
+`-x NCCL_NET_PLUGIN=` (empty) or `=ib` uses native GIN_IB_GDAKI. Do NOT use `NCCL_IB_DISABLE=1`
+or `NCCL_NET_PLUGIN=none` (both kill GIN -> EP rejects with railedGinType NONE). Add
+`-x NCCL_EP_HT_EM_AG_SCAN_MODE=1` to run the scan path for a count-vs-scan match check.
+
+# TE BUILD
+Before building TE, run `nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1` to find the GPU arch, then build with that single arch (e.g. 90 or 100) and 8 threads:
+```
+NVTE_CUDA_ARCHS="<arch>" NVTE_BUILD_THREADS_PER_JOB=8 pip install --no-build-isolation . -v
+```
+
+# TE PRE-COMMIT
+Before committing in a TE repo, run lint for both PyTorch and JAX, and the format script:
+```
+bash qa/L0_pytorch_lint/test.sh
+bash qa/L0_jax_lint/test.sh
+bash qa/format.sh
+```
+Fix any errors before committing.
+
+# Testing
+Disable sandbox to see available GPUS
+
+# Docstring
+When adding new comments or docstring, keep it short and consistent, no intermediate Implementation
+details is needed. Don't use any special symbols
+
+# Session Timer
+- At the start of each session, call `ScheduleWakeup` with `delay_seconds=13500` (3h45m) and a message instructing yourself to summarize the session, save key insights to memory, and append a `## Session HH:MM` block to `~/notes/daily/YYYY-MM-DD.md` (today's date). This fires before the 4-hour interactive node timeout.
+
+# Daily Notes System
+- Daily session logs are saved to `~/notes/daily/YYYY-MM-DD.md` automatically when each Claude session ends.
+- Each entry is a bullet-point summary of what was worked on, decisions made, and open items.
+- When asked to "save progress", "log progress", or "summarize progress" mid-session: write a `## Session HH:MM (mid-session)` block with bullet points to `~/notes/daily/$(date +%Y-%m-%d).md`. Append — never overwrite.
+- When asked to summarize progress for a meeting (1:1, JAX progress, NCCL EP, TE biweekly), read the daily logs for the relevant window: 7 days for weeklies/1:1s, 14 days for biweeklies.
+- Also pull context from:
+  - Slack (`mcp__slack__slack_my_messages`, `mcp__slack__slack_search_messages`)
+  - Outlook (`mcp__outlook__outlook_search_messages`)
+  - GitHub: check https://github.com/phu0ngng for PRs/commits related to TransformerEngine
+  - GitLab: check https://gitlab-master.nvidia.com/phuonguyen/nccl-extensions for MRs/commits related to NCCL EP
+- When mentioning any PR or MR, always include the title and a direct link. Never reference a PR/MR by number alone.
+- Keep all meeting prep summaries short and factual — bullet points only, no filler prose.

@@ -6,30 +6,51 @@
 #   ./launch.sh eos
 #   ./launch.sh eos maxtext
 #   ./launch.sh ptyche jax
+#   ./launch.sh eos jax --jobid 12345        # attach to existing allocation
+#   ./launch.sh ptyche torch --node <name>   # attach via nodename lookup
 #
 # To add a new system:
 #   1. Add a new setup_<system>() function below
 #   2. Add the system name to the case dispatch at the bottom
 
 usage() {
-    echo "Usage: $0 <system> [image] [--postfix <suffix>]"
+    echo "Usage: $0 <system> [image] [--postfix <suffix>] [--jobid <id> | --node <name>]"
     echo "  system: eos, ptyche, lyris"
     echo "  images: jax (default), maxtext, torch, int-jax, int-torch, jaxn, torchn"
     echo "  --postfix <s>: per-instance Claude config + job/container name suffix"
+    echo "  --jobid <id>:  attach to an existing Slurm allocation (adds a new step)"
+    echo "  --node <name>: attach to your existing running allocation on <name>"
     exit 1
 }
 
 POSTFIX=""
+ATTACH_JOBID=""
+ATTACH_NODE=""
 ARGS=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --postfix) POSTFIX="$2"; shift 2 ;;
+        --jobid)   ATTACH_JOBID="$2"; shift 2 ;;
+        --node)    ATTACH_NODE="$2"; shift 2 ;;
         *)         ARGS+=("$1"); shift ;;
     esac
 done
 set -- "${ARGS[@]}"
 
 [ $# -lt 1 ] && usage
+
+# Resolve --node -> jobid by looking up the caller's running job on that node.
+if [ -n "$ATTACH_NODE" ] && [ -z "$ATTACH_JOBID" ]; then
+    ATTACH_JOBID=$(squeue -u "$USER" -w "$ATTACH_NODE" -t RUNNING -h -o '%A' | head -n1)
+    [ -z "$ATTACH_JOBID" ] && { echo "Error: no running job for $USER on node $ATTACH_NODE"; exit 1; }
+    echo "Resolved node ${ATTACH_NODE} -> jobid ${ATTACH_JOBID}"
+fi
+
+# Auto-postfix on attach so container-name and Claude config don't collide with
+# the session that owns the allocation.
+if [ -n "$ATTACH_JOBID" ] && [ -z "$POSTFIX" ]; then
+    POSTFIX="j${ATTACH_JOBID}-$(date +%H%M)"
+fi
 
 SYSTEM="$1"
 IMAGE="${2:-jax}"
@@ -58,11 +79,10 @@ resolve_image() {
         "maxtext")   IMG_LINK="ghcr.io/nvidia/jax:maxtext-2026-03-05" ;;
         "jax")       IMG_LINK="ghcr.io/nvidia/jax:jax" ;;
         "torch")     IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        # "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
-        "jaxi")      IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:26.05-jax" ;;
-        "torchi") IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.05-py3" ;;
-        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.05-py3" ;;
+        "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
+        "torchi")    IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
+        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.06-py3" ;;
+        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.06-py3" ;;
         *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn"; exit 1 ;;
     esac
 
@@ -107,7 +127,7 @@ mkdir -p "${WORKSPACE}/.claude" "${WORKSPACE}/.config" "${WORKSPACE}/.cache/clau
 PF_DIR="${WORKSPACE}/.claude${CLAUDE_SFX}"
 PF_JSON="${WORKSPACE}/.claude${CLAUDE_SFX}.json"
 PF_CACHE="${WORKSPACE}/.cache/claude${CLAUDE_SFX}"
-[ -d "$PF_DIR" ]  || { mkdir -p "$PF_DIR"; cp -a "${WORKSPACE}/.claude/." "$PF_DIR/" 2>/dev/null || true; }
+[ -d "$PF_DIR" ]  || { mkdir -p "$PF_DIR"; cp -a "${WORKSPACE}/.claude/." "$PF_DIR/" 2>/dev/null || true; ln -sf "${WORKSPACE}/.claude/settings.json" "$PF_DIR/settings.json"; }
 [ -f "$PF_JSON" ] || cp -p "${WORKSPACE}/.claude.json" "$PF_JSON"
 mkdir -p "$PF_CACHE"
 
@@ -122,14 +142,17 @@ COMMON_MOUNTS=(
     "${WORKSPACE}/.claude${CLAUDE_SFX}.json:/home/phuonguyen/.claude.json"
     "${WORKSPACE}/.config:/home/phuonguyen/.config"
     "${WORKSPACE}/.cache/claude${CLAUDE_SFX}:/home/phuonguyen/.cache/claude"
+    "${WORKSPACE}/notes:/home/phuonguyen/notes"
 )
-# Per-arch claude launcher (the `~/.local/bin/claude` symlink/binary).
+# Per-arch claude launcher: mount the whole bin dir so auto-updates (which
+# replace the file inode) don't leave a stale bind-mount inside the container.
 ARCH_CLAUDE_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/claude"
-if [ -e "$ARCH_CLAUDE_BIN" ]; then
-    COMMON_MOUNTS+=("${ARCH_CLAUDE_BIN}:/home/phuonguyen/.local/bin/claude")
-else
-    echo "Warning: ${ARCH_CLAUDE_BIN} missing — run 'bash claude/install_arch.sh --arch ${TARGET_ARCH}' first."
+ARCH_CLAUDE_DIR="${WORKSPACE}/.local/bin-${TARGET_ARCH}"
+if [ ! -e "$ARCH_CLAUDE_BIN" ]; then
+    echo "Claude binary missing for ${TARGET_ARCH} — installing..."
+    bash ~/local/dotfiles/claude/install_arch.sh --arch "${TARGET_ARCH}"
 fi
+[ -d "$ARCH_CLAUDE_DIR" ] && COMMON_MOUNTS+=("${ARCH_CLAUDE_DIR}:/home/phuonguyen/.local/bin")
 # Mount only if present on this host (lyris-style nodes may lack these).
 for mp in "/home/phuonguyen/.ssh" "/home/phuonguyen/.gitconfig"; do
     [ -e "$mp" ] && COMMON_MOUNTS+=("$mp")
@@ -150,7 +173,7 @@ fi
 SHARED_INIT+=' && echo "==============================================================" && echo "" '
 # Install deps only when bubblewrap is missing (i.e. fresh image, not the cached
 # sqsh which already has them baked in). Saves ~20-30s on subsequent launches.
-SHARED_INIT+=' && { command -v bubblewrap >/dev/null 2>&1 || { apt-get update && apt-get install -y bubblewrap socat && pip install ninja pybind11 pytest cmake; }; }'
+# SHARED_INIT+=' && { command -v bubblewrap >/dev/null 2>&1 || { apt-get update && apt-get install -y bubblewrap socat && pip install ninja pybind11 pytest cmake; }; }'
 SHARED_INIT+=' && exec bash --rcfile <(echo "export HOME=/home/phuonguyen; export PATH=/home/phuonguyen/.local/bin:\$PATH; alias teinstall=\"pip install --no-build-isolation -e . -v\"")'
 
 # ============================================================
@@ -162,18 +185,35 @@ build_srun_args() {
     mounts_str=$(IFS=,; echo "${all_mounts[*]}")
     JOB_NAME="${ACCOUNT}-te:te_${IMAGE}_${ARCH}${CLAUDE_SFX}"
 
-    SRUN_ARGS=(
-        -A "$ACCOUNT" -N 1 -p "$PARTITION" -t "$TIME"
-        -J "$JOB_NAME"
-        --container-image="$IMG_LINK"
-        --container-name="${IMAGE}-${ARCH}-ct${CLAUDE_SFX}"
-        --container-save="$SAVED_IMAGE"
-        --container-mounts="$mounts_str"
-        --container-workdir="$WORKDIR"
-        --container-writable
-        --export=ALL,NVTE_BUILD_THREADS_PER_JOB=4
-        --pty bash -c "$SHARED_INIT"
-    )
+    if [ -n "$ATTACH_JOBID" ]; then
+        # Attach: new step on an existing allocation. Account/partition/nodes/
+        # time are inherited from the parent job; --overlap lets us share the
+        # node with the primary step.
+        SRUN_ARGS=(
+            --jobid="$ATTACH_JOBID" --overlap
+            --container-image="$IMG_LINK"
+            --container-name="${IMAGE}-${ARCH}-ct${CLAUDE_SFX}"
+            --container-save="$SAVED_IMAGE"
+            --container-mounts="$mounts_str"
+            --container-workdir="$WORKDIR"
+            --container-writable
+            --export=ALL,NVTE_BUILD_THREADS_PER_JOB=4
+            --pty bash -c "$SHARED_INIT"
+        )
+    else
+        SRUN_ARGS=(
+            -A "$ACCOUNT" -N 1 -p "$PARTITION" -t "$TIME"
+            -J "$JOB_NAME"
+            --container-image="$IMG_LINK"
+            --container-name="${IMAGE}-${ARCH}-ct${CLAUDE_SFX}"
+            --container-save="$SAVED_IMAGE"
+            --container-mounts="$mounts_str"
+            --container-workdir="$WORKDIR"
+            --container-writable
+            --export=ALL,NVTE_BUILD_THREADS_PER_JOB=4
+            --pty bash -c "$SHARED_INIT"
+        )
+    fi
 }
 
 # ============================================================
@@ -181,11 +221,7 @@ build_srun_args() {
 # ============================================================
 setup_eos() {
 	LOCAL_MOUNTS=(
-	"/lustre/fsw/${ACCOUNT}/phuong/te:/lustre/fsw/${ACCOUNT}/phuong/te"
-	# EP mounted at the same path inside and outside the container so worktrees
-	# created inside (e.g. via git worktree add) have absolute paths that remain
-	# valid from the host (and vice versa).
-	"/lustre/fsw/${ACCOUNT}/phuong/EP:/lustre/fsw/${ACCOUNT}/phuong/EP"
+	"/lustre/fsw/${ACCOUNT}/phuong:/lustre/fsw/${ACCOUNT}/phuong"
 	)
 	build_srun_args
 }
@@ -195,11 +231,7 @@ setup_eos() {
 # ============================================================
 setup_ptyche() {
 	LOCAL_MOUNTS=(
-	"/lustre/fsw/${ACCOUNT}/phuonguyen/te:/lustre/fsw/${ACCOUNT}/phuonguyen/te"
-	# EP mounted at the same path inside and outside the container so worktrees
-	# created inside (e.g. via git worktree add) have absolute paths that remain
-	# valid from the host (and vice versa).
-	"/lustre/fsw/${ACCOUNT}/phuonguyen/EP:/lustre/fsw/${ACCOUNT}/phuonguyen/EP"
+	"/lustre/fsw/${ACCOUNT}/phuonguyen:/lustre/fsw/${ACCOUNT}/phuonguyen"
 	)
 	build_srun_args
 }
@@ -218,5 +250,11 @@ case "$SYSTEM" in
         ;;
 esac
 
-echo "Launching on ${SYSTEM} with image '${IMAGE}' (${IMG_LINK})..."
+if [ -n "$ATTACH_JOBID" ]; then
+    echo "Attaching to jobid ${ATTACH_JOBID}${ATTACH_NODE:+ (node ${ATTACH_NODE})} with image '${IMAGE}' (${IMG_LINK})..."
+else
+    echo "Launching on ${SYSTEM} with image '${IMAGE}' (${IMG_LINK})..."
+fi
 srun "${SRUN_ARGS[@]}"
+# Reset terminal mouse tracking that Claude/apps enable but don't clean up on abrupt exit.
+printf '\033[?1000l\033[?1002l\033[?1003l\033[?1006l'

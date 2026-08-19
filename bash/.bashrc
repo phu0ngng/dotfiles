@@ -31,9 +31,19 @@ alias la='ls -A'
 alias l='ls -CF'
 
 # nvim
-if command -v nvim &> /dev/null
-then
-  alias vim=$(which nvim)
+if command -v nvim &> /dev/null; then
+  vim() {
+    if [ "$1" = "review" ] && [ -n "$2" ]; then
+      shift
+      if [ -n "$2" ]; then
+        command nvim -c "ReviewDiff $1 $2"
+      else
+        command nvim -c "ReviewDiff $1"
+      fi
+    else
+      command nvim "$@"
+    fi
+  }
 fi
 
 # User-local binaries
@@ -66,6 +76,10 @@ function open() {
 }
 export -f open
 
+# Kerberos: rely on the site default (KCM:) — it's per-UID and shared across
+# every shell/tmux pane via sssd_kcm. Pinning KRB5CCNAME to a FILE nothing
+# populates makes klist empty in fresh tmux panes.
+
 export TMUX_TMPDIR=~/.cache_$host/tmux
 mkdir -p $TMUX_TMPDIR
 export EDITOR='nvim'
@@ -90,3 +104,6 @@ esac
 [ -d "$WORKSPACE/.local/bin-$_claude_arch" ] && \
     export PATH="$WORKSPACE/.local/bin-$_claude_arch:$PATH"
 unset _claude_arch
+
+# Codex / Node.js
+export PATH="$HOME/node/bin:$PATH"

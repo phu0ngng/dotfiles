@@ -12,7 +12,7 @@
 -- Leader key set in options.lua so it's in effect before any keymap is defined.
 
 -- Navigate vim panes better
-vim.keymap.set('n', '<leader>r', ':set rnu!<CR>')
+vim.keymap.set('n', '<leader>N', ':set rnu!<CR>')
 vim.keymap.set('n', '<leader>n', ':set nu!<CR>:exe "set signcolumn=" .. (&signcolumn == "yes" ? "no" : "yes")<CR>')
 vim.keymap.set('n', '<F9>', ':let _s=@/<Bar>:%s/\\s\\+$//e<Bar>:let @/=_s<Bar>:nohl<CR>', {silent=true})
 

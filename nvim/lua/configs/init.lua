@@ -18,6 +18,8 @@ require("configs.spell")
 require("configs.bufferline")
 require("configs.whichkey")
 
+require("configs.codereview")
+
 -- require("configs.codecompanion")
 -- require("configs.dap")
 --require("configs.nvim-ufo")
