@@ -64,7 +64,7 @@ ACCOUNT="coreai_dlfw_dev"
 TIME="4:00:00"
 
 case "$SYSTEM" in
-    lyris)         PARTITION="gb200" ;;
+    lyris)         PARTITION="gb300" ;;
     eos|ptyche)    PARTITION="batch" ;;
     *) echo "Error: unknown system '$SYSTEM'"; usage ;;
 esac
