@@ -146,16 +146,29 @@ COMMON_MOUNTS=(
 )
 # Per-arch claude launcher: mount the whole bin dir so auto-updates (which
 # replace the file inode) don't leave a stale bind-mount inside the container.
+# glab lives in the same dir so the agent gets it via the same mount.
 ARCH_CLAUDE_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/claude"
+ARCH_GLAB_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/glab"
 ARCH_CLAUDE_DIR="${WORKSPACE}/.local/bin-${TARGET_ARCH}"
 if [ ! -e "$ARCH_CLAUDE_BIN" ]; then
     echo "Claude binary missing for ${TARGET_ARCH} — installing..."
     bash ~/local/dotfiles/claude/install_arch.sh --arch "${TARGET_ARCH}"
 fi
+if [ ! -e "$ARCH_GLAB_BIN" ]; then
+    echo "glab binary missing for ${TARGET_ARCH} — installing..."
+    bash ~/local/dotfiles/claude/install_glab.sh --arch "${TARGET_ARCH}" || \
+        echo "  (glab install failed; continuing without it)"
+fi
 [ -d "$ARCH_CLAUDE_DIR" ] && COMMON_MOUNTS+=("${ARCH_CLAUDE_DIR}:/home/phuonguyen/.local/bin")
-# Mount only if present on this host (lyris-style nodes may lack these).
-for mp in "/home/phuonguyen/.ssh" "/home/phuonguyen/.gitconfig"; do
-    [ -e "$mp" ] && COMMON_MOUNTS+=("$mp")
+# SSH keys/config + gitconfig so gitlab tools (glab, git, gitlab MCP) work
+# inside the container. Explicit src:dst form in case the host's home path
+# differs from the container's. Mount only if present on the host (lyris-style
+# nodes may lack these). glab auth (~/.config/glab) is intentionally not mounted
+# here — the .config mount above already covers it via Lustre, so auth done
+# inside the container persists there.
+for mp in ".ssh" ".gitconfig"; do
+    host_src="/home/phuonguyen/${mp}"
+    [ -e "$host_src" ] && COMMON_MOUNTS+=("${host_src}:/home/phuonguyen/${mp}")
 done
 
 # ============================================================
