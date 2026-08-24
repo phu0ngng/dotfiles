@@ -80,7 +80,11 @@ export -f open
 # every shell/tmux pane via sssd_kcm. Pinning KRB5CCNAME to a FILE nothing
 # populates makes klist empty in fresh tmux panes.
 
-export TMUX_TMPDIR=~/.cache_$host/tmux
+# Per-login-node tmux socket dir. tmux sockets are UNIX sockets and only work
+# on the node where the server runs, so sharing one path across login nodes
+# collides. Namespacing by short hostname keeps each login node's sessions
+# reachable when you SSH back to that node.
+export TMUX_TMPDIR=~/.cache_$host/tmux/$(hostname -s)
 mkdir -p $TMUX_TMPDIR
 export EDITOR='nvim'
 export VISUAL='nvim'
