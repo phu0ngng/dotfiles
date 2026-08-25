@@ -8,6 +8,8 @@
 #   ./launch.sh ptyche jax
 #   ./launch.sh eos jax --jobid 12345        # attach to existing allocation
 #   ./launch.sh ptyche torch --node <name>   # attach via nodename lookup
+#   ./launch.sh hecate                       # Rubin (batch-xdr, aarch64 compute nodes)
+#   ./launch.sh hecate torchr --jobid 12345  # attach to an existing EP allocation
 #
 # To add a new system:
 #   1. Add a new setup_<system>() function below
@@ -15,8 +17,9 @@
 
 usage() {
     echo "Usage: $0 <system> [image] [--postfix <suffix>] [--jobid <id> | --node <name>]"
-    echo "  system: eos, ptyche, lyris"
-    echo "  images: jax (default), maxtext, torch, int-jax, int-torch, jaxn, torchn"
+    echo "  system: eos, ptyche, lyris, hecate"
+    echo "  images: jax (default), maxtext, torch, int-jax, int-torch, jaxn, torchn, torchr"
+    echo "          (hecate defaults to 'torchr' — Rubin sm_107 needs a CUDA 13.4 toolkit)"
     echo "  --postfix <s>: per-instance Claude config + job/container name suffix"
     echo "  --jobid <id>:  attach to an existing Slurm allocation (adds a new step)"
     echo "  --node <name>: attach to your existing running allocation on <name>"
@@ -53,7 +56,13 @@ if [ -n "$ATTACH_JOBID" ] && [ -z "$POSTFIX" ]; then
 fi
 
 SYSTEM="$1"
-IMAGE="${2:-jax}"
+# Default image is per-system: hecate compute nodes are Rubin (sm_107) and need a
+# toolkit that knows compute_107, which the stock jax/pytorch images do not have.
+case "$SYSTEM" in
+    hecate) DEFAULT_IMAGE="torchr" ;;
+    *)      DEFAULT_IMAGE="jax" ;;
+esac
+IMAGE="${2:-$DEFAULT_IMAGE}"
 # Per-instance Claude config suffix: image name discriminates sessions running
 # different containers (no --postfix needed); --postfix layers on top for
 # multiple concurrent sessions of the same image. Prevents .claude.json lock
@@ -66,6 +75,7 @@ TIME="4:00:00"
 case "$SYSTEM" in
     lyris)         PARTITION="gb300" ;;
     eos|ptyche)    PARTITION="batch" ;;
+    hecate)        PARTITION="batch-xdr" ;;
     *) echo "Error: unknown system '$SYSTEM'"; usage ;;
 esac
 
@@ -83,14 +93,15 @@ resolve_image() {
         "torchi")    IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
         "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.06-py3" ;;
         "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.06-py3" ;;
-        *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn"; exit 1 ;;
+        #"torchr")    IMG_LINK="gitlab-master.nvidia.com#capa/g2btorch:rubin-latest" ;;
+        "torchr")    IMG_LINK="gitlab-master.nvidia.com/dl/transformerengine/transformerengine:te_ci_rubin-pytorch-py3-devel" ;;
+        *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn, torchr"; exit 1 ;;
     esac
 
-    # CPU arch for per-architecture image caching
-    case "$(uname -m)" in
-        aarch64|arm64) ARCH="arm64" ;;
-        *)             ARCH="x86_64" ;;
-    esac
+    # CPU arch for per-architecture image caching. Must be the *compute node* arch:
+    # on hecate the login node is x86_64 while batch-xdr nodes are aarch64, so
+    # uname -m here would cache an aarch64 image under an x86_64 name.
+    ARCH="$TARGET_ARCH"
 
     # Cache .sqsh on Lustre ($WORKSPACE) — multi-GB images were
     # pushing /home over quota.
@@ -102,6 +113,7 @@ resolve_image() {
 # Compute-node arch may differ from login-node arch (e.g. lyris gb300 = aarch64).
 case "$SYSTEM" in
     lyris)      TARGET_ARCH="aarch64" ;;
+    hecate)     TARGET_ARCH="aarch64" ;;
     eos|ptyche) TARGET_ARCH="x86_64" ;;
     *)          TARGET_ARCH="$(uname -m)" ;;
 esac
@@ -250,12 +262,23 @@ setup_ptyche() {
 }
 
 # ============================================================
+# System: HECATE  (Rubin VR NVL72, batch-xdr, 4 GPUs/node, aarch64)
+# ============================================================
+setup_hecate() {
+	LOCAL_MOUNTS=(
+	"/lustre/fsw/${ACCOUNT}/phuonguyen:/lustre/fsw/${ACCOUNT}/phuonguyen"
+	)
+	build_srun_args
+}
+
+# ============================================================
 # Dispatch
 # ============================================================
 resolve_image
 
 case "$SYSTEM" in
     eos)    setup_eos ;;
+    hecate) setup_hecate ;;
     ptyche|lyris) setup_ptyche ;;
     *)
         echo "Error: unknown system '$SYSTEM'"
