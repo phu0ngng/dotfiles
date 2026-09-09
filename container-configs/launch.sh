@@ -152,6 +152,7 @@ COMMON_MOUNTS=(
     "${WORKSPACE}/.local/share/claude-${TARGET_ARCH}:/home/phuonguyen/.local/share/claude"
     "${WORKSPACE}/.claude${CLAUDE_SFX}:/home/phuonguyen/.claude"
     "${WORKSPACE}/.claude${CLAUDE_SFX}.json:/home/phuonguyen/.claude.json"
+    "${WORKSPACE}/.codex:/home/phuonguyen/.codex"
     "${WORKSPACE}/.config:/home/phuonguyen/.config"
     "${WORKSPACE}/.cache/claude${CLAUDE_SFX}:/home/phuonguyen/.cache/claude"
     "${WORKSPACE}/notes:/home/phuonguyen/notes"
@@ -171,6 +172,15 @@ if [ ! -e "$ARCH_GLAB_BIN" ]; then
     bash ~/local/dotfiles/claude/install_glab.sh --arch "${TARGET_ARCH}" || \
         echo "  (glab install failed; continuing without it)"
 fi
+# codex self-manages its own release under ~/.codex/packages (no per-arch
+# cache like claude's install_arch.sh); just symlink the live "current" build
+# into the per-arch bin dir so it rides along on the same mount. Absolute
+# target so it resolves identically on the host and inside the container
+# (both see /home/phuonguyen/.codex at the same path). Only built for
+# x86_64 today — the symlink is a no-op on other arches until codex ships one.
+ARCH_CODEX_LINK="${WORKSPACE}/.local/bin-${TARGET_ARCH}/codex"
+CODEX_CURRENT_BIN="/home/phuonguyen/.codex/packages/standalone/current/bin/codex"
+[ -e "$CODEX_CURRENT_BIN" ] && ln -sf "$CODEX_CURRENT_BIN" "$ARCH_CODEX_LINK"
 [ -d "$ARCH_CLAUDE_DIR" ] && COMMON_MOUNTS+=("${ARCH_CLAUDE_DIR}:/home/phuonguyen/.local/bin")
 # SSH keys/config + gitconfig so gitlab tools (glab, git, gitlab MCP) work
 # inside the container. Explicit src:dst form in case the host's home path
