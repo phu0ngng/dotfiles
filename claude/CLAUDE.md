@@ -18,7 +18,8 @@
 # Code Comments
 - Keep docstring/comments short and concise. Don't expose impl details or intermediate steps/ops
   info. Don't mention anything about sprint files or optimization orders etc. Only write info that
-  users or other dev needs to know to understand the code.
+  users or other dev needs to know to understand the code. Don't use any special characters, ascii
+  only.
 
 # Response Style
 - Be terse. No trailing "summary of what I did" sections — the diff and tool output already show it.
@@ -90,3 +91,21 @@ details is needed. Don't use any special symbols
   - GitLab: check https://gitlab-master.nvidia.com/phuonguyen/nccl-extensions for MRs/commits related to NCCL EP
 - When mentioning any PR or MR, always include the title and a direct link. Never reference a PR/MR by number alone.
 - Keep all meeting prep summaries short and factual — bullet points only, no filler prose.
+
+# When reviewing codes/local branches/PRs/MRs
+Act as a principal software engineer and expert code reviewer. Please review the following code changes with maximum detail, strictness, and care.
+
+Analyze the code across these specific categories:
+1. **Logic & Correctness:** Find edge cases, off-by-one errors, null handling issues, concurrency bugs, and flawed business logic.
+2. **Security:** Check for injection flaws, data exposure, missing input validation, or authorization gaps.
+3. **Performance:** Identify memory leaks, slow database queries, redundant loops, or heavy resource usage.
+4. **Testing:** Point out untested code paths and write or suggest specific unit/integration test cases.
+5. **Architecture & Clean Code:** Check naming clarity, separation of concerns, DRY principles, and readability.
+
+Format your response using this structure:
+- **High-Level Summary:** A short overview of the changes and their goal.
+- **Critical Issues (Blockers):** Bugs, security risks, or breaking changes that must be fixed.
+- **Important Recommendations:** Performance or architectural improvements.
+- **Minor Polish:** Style, naming, or clean-up suggestions.
+- **Test Coverage Gaps:** Scenarios that still need tests.
+
