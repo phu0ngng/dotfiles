@@ -159,9 +159,10 @@ COMMON_MOUNTS=(
 )
 # Per-arch claude launcher: mount the whole bin dir so auto-updates (which
 # replace the file inode) don't leave a stale bind-mount inside the container.
-# glab lives in the same dir so the agent gets it via the same mount.
+# glab/gh live in the same dir so the agent gets them via the same mount.
 ARCH_CLAUDE_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/claude"
 ARCH_GLAB_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/glab"
+ARCH_GH_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/gh"
 ARCH_CLAUDE_DIR="${WORKSPACE}/.local/bin-${TARGET_ARCH}"
 if [ ! -e "$ARCH_CLAUDE_BIN" ]; then
     echo "Claude binary missing for ${TARGET_ARCH} — installing..."
@@ -171,6 +172,11 @@ if [ ! -e "$ARCH_GLAB_BIN" ]; then
     echo "glab binary missing for ${TARGET_ARCH} — installing..."
     bash ~/local/dotfiles/claude/install_glab.sh --arch "${TARGET_ARCH}" || \
         echo "  (glab install failed; continuing without it)"
+fi
+if [ ! -e "$ARCH_GH_BIN" ]; then
+    echo "gh binary missing for ${TARGET_ARCH} — installing..."
+    bash ~/local/dotfiles/claude/install_gh.sh --arch "${TARGET_ARCH}" || \
+        echo "  (gh install failed; continuing without it)"
 fi
 # codex self-manages its own release under ~/.codex/packages (no per-arch
 # cache like claude's install_arch.sh); just symlink the live "current" build
@@ -182,12 +188,12 @@ ARCH_CODEX_LINK="${WORKSPACE}/.local/bin-${TARGET_ARCH}/codex"
 CODEX_CURRENT_BIN="/home/phuonguyen/.codex/packages/standalone/current/bin/codex"
 [ -e "$CODEX_CURRENT_BIN" ] && ln -sf "$CODEX_CURRENT_BIN" "$ARCH_CODEX_LINK"
 [ -d "$ARCH_CLAUDE_DIR" ] && COMMON_MOUNTS+=("${ARCH_CLAUDE_DIR}:/home/phuonguyen/.local/bin")
-# SSH keys/config + gitconfig so gitlab tools (glab, git, gitlab MCP) work
-# inside the container. Explicit src:dst form in case the host's home path
+# SSH keys/config + gitconfig so git hosting CLIs (glab, gh, git, gitlab MCP)
+# work inside the container. Explicit src:dst form in case the host's home path
 # differs from the container's. Mount only if present on the host (lyris-style
-# nodes may lack these). glab auth (~/.config/glab) is intentionally not mounted
-# here — the .config mount above already covers it via Lustre, so auth done
-# inside the container persists there.
+# nodes may lack these). glab/gh auth (~/.config/glab, ~/.config/gh) is
+# intentionally not mounted here — the .config mount above already covers it
+# via Lustre, so auth done inside the container persists there.
 for mp in ".ssh" ".gitconfig"; do
     host_src="/home/phuonguyen/${mp}"
     [ -e "$host_src" ] && COMMON_MOUNTS+=("${host_src}:/home/phuonguyen/${mp}")
