@@ -241,6 +241,7 @@ WORKDIR="$WORKSPACE"
 # .local/share/claude and .local/bin are kept per-arch so x86 and aarch64
 # installs can coexist on shared Lustre without clobbering each other.
 mkdir -p "${WORKSPACE}/.claude" "${WORKSPACE}/.config" "${WORKSPACE}/.cache/claude" \
+         "${WORKSPACE}/.codex" "${WORKSPACE}/notes" \
          "${WORKSPACE}/.local/share/claude-${TARGET_ARCH}" \
          "${WORKSPACE}/.local/bin-${TARGET_ARCH}"
 # .claude.json must be valid JSON; an empty file makes Claude fail with an EOF
