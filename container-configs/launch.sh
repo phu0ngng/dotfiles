@@ -16,25 +16,38 @@
 #   2. Add the system name to the case dispatch at the bottom
 
 usage() {
-    echo "Usage: $0 <system> [image] [--postfix <suffix>] [--jobid <id> | --node <name>]"
+    echo "Usage: $0 <system> [image] [-p|--perf] [--postfix <suffix>] [--jobid <id> | --node <name>] [--account <name>] [-f|--force-new]"
     echo "  system: eos, ptyche, lyris, hecate"
     echo "  images: jax (default), maxtext, torch, int-jax, int-torch, jaxn, torchn, torchr"
     echo "          (hecate defaults to 'torchr' — Rubin sm_107 needs a CUDA 13.4 toolkit)"
+    echo "  -p, --perf:    request a fresh dedicated allocation (default is to"
+    echo "                 auto-attach to your existing running job on the partition)"
     echo "  --postfix <s>: per-instance Claude config + job/container name suffix"
     echo "  --jobid <id>:  attach to an existing Slurm allocation (adds a new step)"
     echo "  --node <name>: attach to your existing running allocation on <name>"
+    echo "  --account <a>: slurm account (short: dlfw, llm, nccl; or full name)"
+    echo "                 default: highest-fairshare account from 'sshare'"
+    echo "  -f, --force-new: remove any existing enroot container with the same"
+    echo "                 name on the target node first, so pyxis creates a"
+    echo "                 fresh one instead of reusing the stale one"
     exit 1
 }
 
 POSTFIX=""
 ATTACH_JOBID=""
 ATTACH_NODE=""
+ACCOUNT_ARG=""
+PERF=0
+FORCE_NEW=0
 ARGS=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        -p|--perf) PERF=1; shift ;;
         --postfix) POSTFIX="$2"; shift 2 ;;
         --jobid)   ATTACH_JOBID="$2"; shift 2 ;;
         --node)    ATTACH_NODE="$2"; shift 2 ;;
+        --account) ACCOUNT_ARG="$2"; shift 2 ;;
+        -f|--force-new) FORCE_NEW=1; shift ;;
         *)         ARGS+=("$1"); shift ;;
     esac
 done
@@ -42,17 +55,17 @@ set -- "${ARGS[@]}"
 
 [ $# -lt 1 ] && usage
 
+# Perf runs must never share an allocation, so reject explicit attach flags.
+if [ "$PERF" -eq 1 ] && { [ -n "$ATTACH_JOBID" ] || [ -n "$ATTACH_NODE" ]; }; then
+    echo "Error: -p/--perf cannot be combined with --jobid/--node (perf jobs must own their allocation)"
+    exit 1
+fi
+
 # Resolve --node -> jobid by looking up the caller's running job on that node.
 if [ -n "$ATTACH_NODE" ] && [ -z "$ATTACH_JOBID" ]; then
     ATTACH_JOBID=$(squeue -u "$USER" -w "$ATTACH_NODE" -t RUNNING -h -o '%A' | head -n1)
     [ -z "$ATTACH_JOBID" ] && { echo "Error: no running job for $USER on node $ATTACH_NODE"; exit 1; }
     echo "Resolved node ${ATTACH_NODE} -> jobid ${ATTACH_JOBID}"
-fi
-
-# Auto-postfix on attach so container-name and Claude config don't collide with
-# the session that owns the allocation.
-if [ -n "$ATTACH_JOBID" ] && [ -z "$POSTFIX" ]; then
-    POSTFIX="j${ATTACH_JOBID}-$(date +%H%M)"
 fi
 
 SYSTEM="$1"
@@ -69,15 +82,116 @@ IMAGE="${2:-$DEFAULT_IMAGE}"
 # contention across concurrent claude processes on one node.
 CLAUDE_SFX="-${IMAGE}${POSTFIX:+-${POSTFIX}}"
 
-ACCOUNT="coreai_dlfw_dev"
 TIME="4:00:00"
 
 case "$SYSTEM" in
-    lyris)         PARTITION="gb300" ;;
+    lyris)         [ "$PERF" -eq 1 ] && PARTITION="gb300" || PARTITION="gb200" ;;
     eos|ptyche)    PARTITION="batch" ;;
     hecate)        PARTITION="batch-xdr" ;;
     *) echo "Error: unknown system '$SYSTEM'"; usage ;;
 esac
+
+# Perf tag: stamped into the allocation's job name so no-perf sessions only
+# auto-attach to no-perf allocations (and never piggy-back on a perf run).
+if [ "$PERF" -eq 1 ]; then
+    PERF_TAG="perf"
+else
+    PERF_TAG="nop"
+fi
+
+# Auto-attach: when not in perf mode and no explicit --jobid/--node was given,
+# look for an existing running no-perf allocation of ours on this partition and
+# attach to it instead of requesting a new node. Perf mode always allocates.
+# At most MAX_SESSIONS sessions may share one allocation (avoids overloading a
+# node); among eligible allocations, prefer the one with the most time left.
+MAX_SESSIONS=3
+
+# Converts Slurm TIME_LEFT ([days-]hh:mm:ss | mm:ss | ss) to seconds.
+time_to_seconds() {
+    local t="$1" days=0 rest="$1"
+    if [[ "$t" == *-* ]]; then
+        days="${t%%-*}"
+        rest="${t#*-}"
+    fi
+    local IFS=: parts
+    read -ra parts <<< "$rest"
+    local h=0 m=0 s=0
+    case "${#parts[@]}" in
+        3) h=${parts[0]}; m=${parts[1]}; s=${parts[2]} ;;
+        2) m=${parts[0]}; s=${parts[1]} ;;
+        1) s=${parts[0]} ;;
+    esac
+    echo $(( 10#$days*86400 + 10#$h*3600 + 10#$m*60 + 10#$s ))
+}
+
+# Number of steps currently attached to a job (excludes the auto extern/batch
+# steps), used as the "sessions bound to this allocation" count.
+count_job_sessions() {
+    squeue -h -s -j "$1" -o '%i' 2>/dev/null | grep -Ev '\.(extern|batch)$' | wc -l
+}
+
+if [ "$PERF" -eq 0 ] && [ -z "$ATTACH_JOBID" ]; then
+    BEST_JOBID=""
+    BEST_SECS=-1
+    while IFS='|' read -r jid jname jleft; do
+        [ -z "$jid" ] && continue
+        [[ "$jname" == *"[nop]"* ]] || continue
+        sessions=$(count_job_sessions "$jid")
+        [ "$sessions" -ge "$MAX_SESSIONS" ] && continue
+        secs=$(time_to_seconds "$jleft")
+        if [ "$secs" -gt "$BEST_SECS" ]; then
+            BEST_SECS=$secs
+            BEST_JOBID=$jid
+        fi
+    done < <(squeue -u "$USER" -p "$PARTITION" -t RUNNING -h -o '%A|%j|%L')
+    if [ -n "$BEST_JOBID" ]; then
+        ATTACH_JOBID="$BEST_JOBID"
+        echo "Auto-attaching to existing no-perf jobid ${ATTACH_JOBID} on ${PARTITION} (most time left, use -p for a fresh allocation)"
+    fi
+fi
+
+# Auto-postfix on attach so container-name and Claude config don't collide with
+# the session that owns the allocation.
+if [ -n "$ATTACH_JOBID" ] && [ -z "$POSTFIX" ]; then
+    POSTFIX="j${ATTACH_JOBID}-$(date +%H%M)"
+    CLAUDE_SFX="-${IMAGE}${POSTFIX:+-${POSTFIX}}"
+fi
+
+# ------------------------------------------------------------
+# Account selection: --account flag (short or full name), else
+# pick the account with the highest fairshare from `sshare`.
+# ------------------------------------------------------------
+resolve_short_account() {
+    case "$1" in
+        dlfw) echo "coreai_dlfw_dev" ;;
+        llm)  echo "coreai_dlalgo_llm" ;;
+        nccl) echo "coreai_libraries_nccl" ;;
+        *)    echo "$1" ;;
+    esac
+}
+
+# CI account is excluded from auto-pick — it's for CI jobs, not interactive use.
+pick_best_account() {
+    local out
+    out=$(sshare -U -u "$USER" --format=Account,FairShare -P -n 2>/dev/null \
+          | awk -F'|' '$1!="" && $1!="root" && $1!="core_dlfw_ci" && $2!="" {gsub(/^ +| +$/,"",$1); print $2"|"$1}' \
+          | sort -t'|' -k1,1 -gr \
+          | head -n1 \
+          | cut -d'|' -f2)
+    echo "${out:-coreai_dlfw_dev}"
+}
+
+if [ -n "$ACCOUNT_ARG" ]; then
+    ACCOUNT=$(resolve_short_account "$ACCOUNT_ARG")
+    echo "Using account: ${ACCOUNT} (from --account ${ACCOUNT_ARG})"
+elif [ -n "$ATTACH_JOBID" ]; then
+    # Attach mode inherits the parent job's account; ACCOUNT is only used for
+    # JOB_NAME here, so pick something sensible without querying sshare.
+    ACCOUNT="coreai_dlfw_dev"
+else
+    ACCOUNT=$(pick_best_account)
+    echo "Auto-picked account: ${ACCOUNT} (highest fairshare)"
+fi
 
 # ============================================================
 # Shared: image registry
@@ -91,11 +205,10 @@ resolve_image() {
         "torch")     IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
         "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
         "torchi")    IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.06-py3" ;;
-        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.06-py3" ;;
-        #"torchr")    IMG_LINK="gitlab-master.nvidia.com#capa/g2btorch:rubin-latest" ;;
+        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.07-py3" ;;
+        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.07-py3" ;;
         "torchr")    IMG_LINK="gitlab-master.nvidia.com/dl/transformerengine/transformerengine:te_ci_rubin-pytorch-py3-devel" ;;
-        *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn, torchr"; exit 1 ;;
+        *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn"; exit 1 ;;
     esac
 
     # CPU arch for per-architecture image caching. Must be the *compute node* arch:
@@ -178,15 +291,23 @@ if [ ! -e "$ARCH_GH_BIN" ]; then
     bash ~/local/dotfiles/claude/install_gh.sh --arch "${TARGET_ARCH}" || \
         echo "  (gh install failed; continuing without it)"
 fi
-# codex self-manages its own release under ~/.codex/packages (no per-arch
-# cache like claude's install_arch.sh); just symlink the live "current" build
-# into the per-arch bin dir so it rides along on the same mount. Absolute
-# target so it resolves identically on the host and inside the container
-# (both see /home/phuonguyen/.codex at the same path). Only built for
-# x86_64 today — the symlink is a no-op on other arches until codex ships one.
-ARCH_CODEX_LINK="${WORKSPACE}/.local/bin-${TARGET_ARCH}/codex"
-CODEX_CURRENT_BIN="/home/phuonguyen/.codex/packages/standalone/current/bin/codex"
-[ -e "$CODEX_CURRENT_BIN" ] && ln -sf "$CODEX_CURRENT_BIN" "$ARCH_CODEX_LINK"
+# codex self-manages its own release under ~/.codex/packages, but "current"
+# only tracks whichever arch last ran the CLI natively. When that matches
+# TARGET_ARCH, ride along on it (absolute target so it resolves identically
+# on the host and inside the container, both seeing /home/phuonguyen/.codex
+# at the same path); otherwise fall back to install_codex.sh like claude/glab
+# below, which fetches that arch's release directly instead of "current".
+ARCH_CODEX_BIN="${WORKSPACE}/.local/bin-${TARGET_ARCH}/codex"
+CODEX_CURRENT_BIN="${WORKSPACE}/.codex/packages/standalone/current/bin/codex"
+CODEX_CONTAINER_BIN="/home/phuonguyen/.codex/packages/standalone/current/bin/codex"
+CODEX_CURRENT_TARGET="$(readlink -f "${WORKSPACE}/.codex/packages/standalone/current" 2>/dev/null)"
+if [ -e "$CODEX_CURRENT_BIN" ] && [[ "$CODEX_CURRENT_TARGET" == *"$TARGET_ARCH"* ]]; then
+    ln -sf "$CODEX_CONTAINER_BIN" "$ARCH_CODEX_BIN"
+elif [ ! -e "$ARCH_CODEX_BIN" ]; then
+    echo "codex binary missing for ${TARGET_ARCH} — installing..."
+    bash ~/local/dotfiles/claude/install_codex.sh --arch "${TARGET_ARCH}" || \
+        echo "  (codex install failed; continuing without it)"
+fi
 [ -d "$ARCH_CLAUDE_DIR" ] && COMMON_MOUNTS+=("${ARCH_CLAUDE_DIR}:/home/phuonguyen/.local/bin")
 # SSH keys/config + gitconfig so git hosting CLIs (glab, gh, git, gitlab MCP)
 # work inside the container. Explicit src:dst form in case the host's home path
@@ -224,7 +345,15 @@ build_srun_args() {
     local all_mounts=("${LOCAL_MOUNTS[@]}" "${COMMON_MOUNTS[@]}")
     local mounts_str
     mounts_str=$(IFS=,; echo "${all_mounts[*]}")
-    JOB_NAME="${ACCOUNT}-te:te_${IMAGE}_${ARCH}${CLAUDE_SFX}"
+    JOB_NAME="${ACCOUNT}-te:te_${IMAGE}_${ARCH}${CLAUDE_SFX}[${PERF_TAG}]"
+    CONTAINER_NAME="${IMAGE}-${ARCH}-ct${CLAUDE_SFX}"
+
+    # --force-new: pyxis reuses an existing enroot container that matches
+    # --container-name instead of recreating it from IMG_LINK. Remove the
+    # stale one on the target node first so we get a clean container.
+    if [ "$FORCE_NEW" -eq 1 ] && [ -n "$ATTACH_JOBID" ]; then
+        srun --jobid="$ATTACH_JOBID" --overlap enroot remove -f "$CONTAINER_NAME" 2>/dev/null || true
+    fi
 
     if [ -n "$ATTACH_JOBID" ]; then
         # Attach: new step on an existing allocation. Account/partition/nodes/
@@ -233,7 +362,7 @@ build_srun_args() {
         SRUN_ARGS=(
             --jobid="$ATTACH_JOBID" --overlap
             --container-image="$IMG_LINK"
-            --container-name="${IMAGE}-${ARCH}-ct${CLAUDE_SFX}"
+            --container-name="$CONTAINER_NAME"
             --container-save="$SAVED_IMAGE"
             --container-mounts="$mounts_str"
             --container-workdir="$WORKDIR"
@@ -246,7 +375,7 @@ build_srun_args() {
             -A "$ACCOUNT" -N 1 -p "$PARTITION" -t "$TIME"
             -J "$JOB_NAME"
             --container-image="$IMG_LINK"
-            --container-name="${IMAGE}-${ARCH}-ct${CLAUDE_SFX}"
+            --container-name="$CONTAINER_NAME"
             --container-save="$SAVED_IMAGE"
             --container-mounts="$mounts_str"
             --container-workdir="$WORKDIR"
@@ -261,8 +390,10 @@ build_srun_args() {
 # System: EOS
 # ============================================================
 setup_eos() {
+	# Mount the user's workspace directly; keep it decoupled from $ACCOUNT
+	# so auto-picked accounts don't break the bind.
 	LOCAL_MOUNTS=(
-	"/lustre/fsw/${ACCOUNT}/phuong:/lustre/fsw/${ACCOUNT}/phuong"
+	"${WORKSPACE}:${WORKSPACE}"
 	)
 	build_srun_args
 }
@@ -272,7 +403,7 @@ setup_eos() {
 # ============================================================
 setup_ptyche() {
 	LOCAL_MOUNTS=(
-	"/lustre/fsw/${ACCOUNT}/phuonguyen:/lustre/fsw/${ACCOUNT}/phuonguyen"
+	"${WORKSPACE}:${WORKSPACE}"
 	)
 	build_srun_args
 }
