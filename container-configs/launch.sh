@@ -153,7 +153,7 @@ fi
 # Auto-postfix on attach so container-name and Claude config don't collide with
 # the session that owns the allocation.
 if [ -n "$ATTACH_JOBID" ] && [ -z "$POSTFIX" ]; then
-    POSTFIX="j${ATTACH_JOBID}-$(date +%H%M)"
+    POSTFIX="j${ATTACH_JOBID}-$(date +%H%M%S)"
     CLAUDE_SFX="-${IMAGE}${POSTFIX:+-${POSTFIX}}"
 fi
 
