@@ -111,3 +111,6 @@ unset _claude_arch
 
 # Codex / Node.js
 export PATH="$HOME/node/bin:$PATH"
+
+# Secrets (gitlab/github tokens etc), not tracked by this repo
+[ -f "$HOME/.env_secrets" ] && source "$HOME/.env_secrets"
