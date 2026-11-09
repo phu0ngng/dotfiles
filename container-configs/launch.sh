@@ -205,8 +205,8 @@ resolve_image() {
         "torch")     IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
         "jaxi")   IMG_LINK="gitlab-master.nvidia.com/dl/dgx/jax:jax" ;;
         "torchi")    IMG_LINK="gitlab-master.nvidia.com/dl/dgx/pytorch:main-py3-devel" ;;
-        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.08-py3" ;;
-        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.08-py3" ;;
+        "jaxn")      IMG_LINK="nvcr.io/nvidia/jax:26.10-py3" ;;
+        "torchn")    IMG_LINK="nvcr.io/nvidia/pytorch:26.10-py3" ;;
         "torchr")    IMG_LINK="gitlab-master.nvidia.com/dl/transformerengine/transformerengine:te_ci_rubin-pytorch-py3-devel" ;;
         *) echo "Unknown image: $IMAGE. Available: jax, maxtext, torch, int-jax, int-torch, jaxn, torchn"; exit 1 ;;
     esac
@@ -247,6 +247,26 @@ mkdir -p "${WORKSPACE}/.claude" "${WORKSPACE}/.config" "${WORKSPACE}/.cache/clau
 # .claude.json must be valid JSON; an empty file makes Claude fail with an EOF
 # parse error. Seed with `{}` only when missing (don't clobber existing config).
 [ -s "${WORKSPACE}/.claude.json" ] || echo '{}' > "${WORKSPACE}/.claude.json"
+
+# OAuth tokens refresh inside whichever per-instance dir is actively running,
+# not in the base config, so a freshly created instance (new attach -> new
+# CLAUDE_SFX) would seed from a stale base copy and prompt for login again.
+# Pull whichever .credentials.json (base or any existing per-instance dir) was
+# written most recently into base, so every new seed point stays current.
+sync_claude_credentials() {
+    local newest="" newest_mtime=-1 f mtime
+    for f in "${WORKSPACE}/.claude/.credentials.json" "${WORKSPACE}"/.claude-*/.credentials.json; do
+        [ -f "$f" ] || continue
+        mtime=$(stat -c %Y "$f" 2>/dev/null) || continue
+        if [ "$mtime" -gt "$newest_mtime" ]; then
+            newest_mtime=$mtime
+            newest="$f"
+        fi
+    done
+    [ -n "$newest" ] && [ "$newest" != "${WORKSPACE}/.claude/.credentials.json" ] && \
+        cp -p "$newest" "${WORKSPACE}/.claude/.credentials.json"
+}
+sync_claude_credentials
 
 # Per-instance Claude config: seed from base on first use so auth carries over,
 # then mount the per-instance copy at the canonical in-container path.
@@ -337,6 +357,8 @@ SHARED_INIT+=' && echo "========================================================
 # Install deps only when bubblewrap is missing (i.e. fresh image, not the cached
 # sqsh which already has them baked in). Saves ~20-30s on subsequent launches.
 # SHARED_INIT+=' && { command -v bubblewrap >/dev/null 2>&1 || { apt-get update && apt-get install -y bubblewrap socat && pip install ninja pybind11 pytest cmake; }; }'
+# ccache: install only when missing; failure is non-fatal.
+SHARED_INIT+=' && { command -v ccache >/dev/null 2>&1 || { apt-get update && apt-get install -y ccache; } || echo "ccache install failed; continuing without it"; }'
 SHARED_INIT+=' && exec bash --rcfile <(echo "export HOME=/home/phuonguyen; export PATH=/home/phuonguyen/.local/bin:\$PATH; alias teinstall=\"pip install --no-build-isolation -e . -v\"")'
 
 # ============================================================
